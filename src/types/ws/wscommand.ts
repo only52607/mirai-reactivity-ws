@@ -1,15 +1,15 @@
-export declare type PluginInfoCommand = "about"
+export type PluginInfoCommand = "about"
 
-export declare type TempCommand = "messageFromId"
+export type TempCommand = "messageFromId"
 
-export declare type AccountInfoCommand = "botProfile" 
+export type AccountInfoCommand = "botProfile" 
 
-export declare type FriendCommand = 
+export type FriendCommand = 
     "friendList" | 
     "friendProfile" | 
     "deleteFriend"
 
-export declare type GroupCommand = 
+export type GroupCommand = 
     "groupList" | 
     "memberList" | 
     "memberProfile" | 
@@ -24,7 +24,7 @@ export declare type GroupCommand =
     "memberInfo" | 
     "unmuteAll" 
 
-export declare type MessageCommand = 
+export type MessageCommand = 
     "sendFriendMessage" |
     "sendGroupMessage" |
     "sendGroupMessage" |
@@ -32,7 +32,7 @@ export declare type MessageCommand =
     "sendNudge" |
     "recall" 
 
-export declare type FileCommand = 
+export type FileCommand = 
     "file_list" |
     "file_info" |
     "file_mkdir" |
@@ -40,12 +40,12 @@ export declare type FileCommand =
     "file_move" |
     "file_rename" 
 
-export declare type EventCommand = 
+export type EventCommand = 
     "resp_newFriendRequestEvent" |
     "resp_memberJoinRequestEvent" |
     "resp_botInvitedJoinGroupRequestEvent" 
 
-export declare type WsCommand = 
+export type WsCommand = 
     PluginInfoCommand |
     TempCommand |
     AccountInfoCommand |
@@ -56,8 +56,8 @@ export declare type WsCommand =
     FileCommand | 
     EventCommand
 
-export declare type GetOrUpdate = "get"|"update"
+export type GetOrUpdate = "get"|"update"
 
-export declare type SubCommandOwner = "groupConfig"|"memberInfo"
+export type SubCommandOwner = "groupConfig"|"memberInfo"
 
-export declare type WsSubCommand<T extends WsCommand> = T extends SubCommandOwner ? GetOrUpdate : null
+export type WsSubCommand<T extends WsCommand> = T extends SubCommandOwner ? GetOrUpdate : null

@@ -1,5 +1,5 @@
 export * from "./contact"
 export * from "./message"
-export * from "./config"
-export * from "./api-request"
-// export * from "./api-response"
+export * from "./group-relate"
+export * from "./api-response"
+export * from "./plugin-info"

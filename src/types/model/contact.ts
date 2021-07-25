@@ -66,3 +66,22 @@ export interface Member extends BaseUser {
 }
 
 export type User = Friend | Member;
+
+export type FriendList = Friend[];
+export type GroupList = Group[];
+export type MemberList = Member[];
+
+export interface UserProfile {
+  nickname: string,
+  email: string,
+  age: number,
+  level: number,
+  sign: string,
+  sex: "UNKNOWN" | "MALE" | "FEMALE" 
+}
+
+export interface BotProfile extends UserProfile {}
+
+export interface FriendProfile extends UserProfile {}
+
+export interface MemberProfile extends UserProfile {}

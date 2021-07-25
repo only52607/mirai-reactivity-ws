@@ -342,3 +342,28 @@ export type SingleMessage = SingleMessageMap[SingleMessageType];
  * 消息链
  */
 export type MessageChain = Array<SingleMessage>;
+
+/**
+ * 消息回执
+ */
+
+
+
+export interface UploadImageReceipt {
+  imageId: string;
+  url: string;
+  path: string;
+}
+
+export interface UploadVoiceReceipt {
+  voiceId: string;
+  url: string;
+  path: string;
+}
+
+export interface MessageReceipt {
+  /**
+   * 一个Int类型属性，标识本条消息，用于撤回和引用回复
+   */
+  messageId: number;
+}

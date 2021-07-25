@@ -1,31 +1,68 @@
-import { File, GroupConfig, MemberInfo, MessageChain, MessageEvent, SendMessage } from "src/types";
-import { About, BaseResponse, FriendList, GroupFile, GroupFileInfo, GroupList, MemberList, MessageFromId, UploadImage, UploadVoice } from "src/types/model/api-response";
+import { BotProfile, File, FriendProfile, GroupConfig, MemberInfo, MemberProfile, MessageChain, MessageEvent, MessageReceipt } from "../types";
+import { PluginInfo, FriendList, GroupFile, GroupFileInfo, GroupList, MemberList, UploadImageReceipt, UploadVoiceReceipt } from "../types/model";
 
-export declare interface MiraiApiExecutor {
+
+/**
+ * Mirai 接口定义
+ */
+
+interface EventProcessApi {
+}
+
+interface AccountInfoApi {
     /**
-   * 使用此方法获取插件的信息，如版本号
-   * data.data: { "version": "v1.0.0" }
-   */
-    about(): Promise<About>;
+         * 获取 bot 的好友列表
+         */
+    friendList(): Promise<FriendList>
 
     /**
-     * 通过 messageId 获取一条被缓存的消息
-     * @param id 获取消息的messageId
+     * 获取 bot 的群列表
      */
-    messageFromId(id: number): Promise<MessageFromId | MessageEvent>;
+    groupList(): Promise<GroupList>
 
     /**
-     * 使用此方法向指定好友发送消息
-     * @param messageChain 消息链，是一个消息对象构成的数组
-     * @param target 发送消息目标好友的 QQ 号
-     * @param quote 引用一条消息的messageId进行回复
-     * @returns { code: 0, msg: "success", messageId: 123456 } messageId 一个Int类型属性，标识本条消息，用于撤回和引用回复
+     * 获取 BOT 的群成员列表
+     * @param target 指定群的群号
      */
+    memberList(target: number): Promise<MemberList>
+
+    /**
+     * 获取 bot 的群列表
+     */
+    botProfile(): Promise<BotProfile>
+
+    /**
+    * 获取 bot 的群列表
+    */
+    friendProfile(target: number): Promise<FriendProfile>
+
+    /**
+     * 获取 bot 的群列表
+     */
+    memberProfile(target: number, memberId: number): Promise<MemberProfile>
+}
+
+interface MessageTempStoreApi {
+    /**
+         * 通过 messageId 获取一条被缓存的消息
+         * @param id 获取消息的messageId
+         */
+    messageFromId(id: number): Promise<void | MessageEvent>;
+}
+
+interface ChatMessageApi {
+    /**
+         * 使用此方法向指定好友发送消息
+         * @param messageChain 消息链，是一个消息对象构成的数组
+         * @param target 发送消息目标好友的 QQ 号
+         * @param quote 引用一条消息的messageId进行回复
+         * @returns { code: 0, msg: "success", messageId: 123456 } messageId 一个Int类型属性，标识本条消息，用于撤回和引用回复
+         */
     sendFriendMessage(
         messageChain: string | MessageChain,
         target: number,
         quote?: number
-    ): Promise<SendMessage>
+    ): Promise<MessageReceipt>
 
     /**
      * 使用此方法向指定群发送消息
@@ -38,7 +75,7 @@ export declare interface MiraiApiExecutor {
         messageChain: string | MessageChain,
         target: number,
         quote?: number
-    ): Promise<SendMessage>
+    ): Promise<MessageReceipt>
 
     /**
      * 发送临时会话消息
@@ -52,7 +89,7 @@ export declare interface MiraiApiExecutor {
         qq: number,
         group: number,
         quote?: number
-    ): Promise<SendMessage>
+    ): Promise<MessageReceipt>
 
     /**
      * 使用此方法向指定对象（群或好友）发送图片消息 除非需要通过此手段获取imageId，否则不推荐使用该接口
@@ -76,7 +113,7 @@ export declare interface MiraiApiExecutor {
     uploadImage(
         type: "friend" | "group" | "temp",
         img: File
-    ): Promise<UploadImage>
+    ): Promise<UploadImageReceipt>
 
     /**
      * 使用此方法上传语音文件至服务器并返回 VoiceId
@@ -86,8 +123,8 @@ export declare interface MiraiApiExecutor {
     uploadVoice(
         type: "friend" | "group" | "temp",
         voice: File
-    ): Promise<UploadVoice>
-    
+    ): Promise<UploadVoiceReceipt>
+
     /**
      * 文件上传
      * @param type 当前仅支持 "Group"
@@ -100,7 +137,7 @@ export declare interface MiraiApiExecutor {
         target: number,
         path: string,
         file: File
-    ): Promise<BaseResponse>
+    ): Promise<void>
 
     /**
      * 撤回消息
@@ -109,35 +146,34 @@ export declare interface MiraiApiExecutor {
      */
     recall(
         target: number | MessageEvent
-    ): Promise<BaseResponse>
+    ): Promise<void>
+
 
     /**
-     * 获取 bot 的好友列表
-     */
-    friendList(): Promise<FriendList>
+    * 戳一戳
+    * @param target 戳一戳的目标, QQ号, 可以为 bot QQ号
+    * @param subject 戳一戳接受主体(上下文), 戳一戳信息会发送至该主体, 为群号/好友QQ号
+    * @param kind 上下文类型
+    */
+    sendNudge(
+        target: number,
+        subject: number,
+        kind: "Friend" | "Group"
+    ): Promise<void>
+}
 
-    /**
-     * 获取 bot 的群列表
-     */
-    groupList(): Promise<GroupList>
-
-    /**
-     * 获取 BOT 的群成员列表
-     * @param target 指定群的群号
-     */
-    memberList(target: number): Promise<MemberList>
-
+interface GroupManagerApi {
     /**
      * 指定群进行全体禁言
      * @param target 指定群的群号
      */
-    muteAll(target: number): Promise<BaseResponse>
+    muteAll(target: number): Promise<void>
 
     /**
      * 指定群解除全体禁言
      * @param target 指定群的群号
      */
-    unmuteAll(target: number): Promise<BaseResponse>
+    unmuteAll(target: number): Promise<void>
 
     /**
      * 指定群禁言指定群员
@@ -149,7 +185,7 @@ export declare interface MiraiApiExecutor {
         target: number,
         memberId: number,
         time: number
-    ): Promise<BaseResponse>
+    ): Promise<void>
 
     /**
      * 指定群解除群成员禁言
@@ -159,7 +195,7 @@ export declare interface MiraiApiExecutor {
     unmute(
         target: number,
         memberId: number
-    ): Promise<BaseResponse>
+    ): Promise<void>
 
     /**
      * 移除群成员
@@ -171,25 +207,25 @@ export declare interface MiraiApiExecutor {
         target: number,
         memberId: number,
         msg: string
-    ): Promise<BaseResponse>
+    ): Promise<void>
 
     /**
      * 退出群聊
      * @param target 群号
      * bot为该群群主时退出失败并返回code 10(无操作权限)
      */
-    quit(target: number): Promise<BaseResponse>
+    quit(target: number): Promise<void>
 
     /**
-     * 传入 config 时，修改群设置
-     * 未传入 config 时，获取群设置
-     * @param target 指定群的群号
-     * @param config 群设置
-     */
+    * 传入 config 时，修改群设置
+    * 未传入 config 时，获取群设置
+    * @param target 指定群的群号
+    * @param config 群设置
+    */
     groupConfig(
         target: number,
         config?: GroupConfig
-    ): Promise<BaseResponse | GroupConfig>
+    ): Promise<GroupConfig>
 
     /**
      * 传入 info 时，修改群员资料
@@ -202,12 +238,10 @@ export declare interface MiraiApiExecutor {
         target: number,
         memberId: number,
         info?: MemberInfo
-    ): Promise<BaseResponse | MemberInfo>
+    ): Promise<MemberInfo>
 
-
-    // 配置相关
     /**
-     * 获取 Mangers
+     * 获取 Managers
      */
     managers(): Promise<number[]>
 
@@ -215,30 +249,20 @@ export declare interface MiraiApiExecutor {
      * 设置群精华消息
      * @param target 消息ID
      */
-    setEssence(target: number): Promise<BaseResponse>
+    setEssence(target: number): Promise<void>
+}
 
+interface GroupFileManagerApi {
     /**
-     * 戳一戳
-     * @param target 戳一戳的目标, QQ号, 可以为 bot QQ号
-     * @param subject 戳一戳接受主体(上下文), 戳一戳信息会发送至该主体, 为群号/好友QQ号
-     * @param kind 上下文类型
-     */
-    sendNudge(
-        target: number,
-        subject: number,
-        kind: "Friend" | "Group"
-    ): Promise<BaseResponse>
-
-
-    // 群文件管理
-    /**
-     * 获取群文件列表
-     * @param target 指定群的群号
-     * @param dir 指定查询目录，不填为根目录
-     */
+         * 获取群文件列表
+         * @param target 指定群的群号
+         * @param dir 指定查询目录，不填为根目录
+         */
     groupFileList(
-        target: number,
-        dir?: string
+        id: string,
+        target?: number,
+        group?: number,
+        qq?: number,
     ): Promise<GroupFile[]>
 
     /**
@@ -247,8 +271,10 @@ export declare interface MiraiApiExecutor {
      * @param id 文件唯一ID
      */
     groupFileInfo(
-        target: number,
-        id: string
+        id: string,
+        target?: number,
+        group?: number,
+        qq?: number,
     ): Promise<GroupFileInfo>
 
     /**
@@ -258,10 +284,12 @@ export declare interface MiraiApiExecutor {
      * @param rename
      */
     groupFileRename(
-        target: number,
         id: string,
-        rename: string
-    ): Promise<BaseResponse>
+        renameTo: string,
+        target?: number,
+        group?: number,
+        qq?: number,
+    ): Promise<void>
 
     /**
      * 创建群文件目录
@@ -269,9 +297,12 @@ export declare interface MiraiApiExecutor {
      * @param dir
      */
     groupMkdir(
-        group: number,
-        dir: string
-    ): Promise<BaseResponse>
+        id: string,
+        directoryName: string,
+        target?: number,
+        group?: number,
+        qq?: number
+    ): Promise<void>
 
     /**
      * 移动群文件
@@ -281,10 +312,12 @@ export declare interface MiraiApiExecutor {
      * @returns
      */
     groupFileMove(
-        target: number,
         id: string,
-        movePath: string
-    ): Promise<BaseResponse>
+        moveTo: string,
+        target?: number,
+        group?: number,
+        qq?: number,
+    ): Promise<void>
 
     /**
      * 删除群文件/目录
@@ -293,7 +326,20 @@ export declare interface MiraiApiExecutor {
      * @returns
      */
     groupFileDelete(
-        target: number,
-        id: string
-    ): Promise<BaseResponse>
+        id: string,
+        target?: number,
+        group?: number,
+        qq?: number,
+    ): Promise<void>
+}
+
+interface PluginApi {
+    /**
+     * 使用此方法获取插件的信息，如版本号
+     * data.data: { "version": "v1.0.0" }
+     */
+    about(): Promise<PluginInfo>;
+}
+
+export interface MiraiApi extends GroupManagerApi, GroupFileManagerApi, EventProcessApi, AccountInfoApi, MessageTempStoreApi, ChatMessageApi, PluginApi {
 }
