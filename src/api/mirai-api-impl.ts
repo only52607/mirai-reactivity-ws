@@ -1,13 +1,76 @@
-import { BotProfile, File, FriendProfile, GroupConfig, MemberInfo, MemberProfile, MessageChain, MessageEvent, MessageReceipt, WsResponseBody } from "../types";
-import { PluginInfo, FriendList, GroupFile, GroupFileInfo, GroupList, MemberList, MessageFromId, UploadImageReceipt, UploadVoiceReceipt, MiraiApiResponse } from "../types/model";
+import { getMessageFromStatusCode } from "../utils/status";
+import { BotProfile, EventListener, File, FriendProfile, GroupConfig, MemberInfo, MemberProfile, MessageChain, MessageEvent, MessageReceipt, WsCommand, WsRequestBody, WsResponseBody } from "../types";
+import { PluginInfo, FriendList, GroupFile, GroupFileInfo, GroupList, MemberList, UploadImageReceipt, UploadVoiceReceipt, MiraiApiResponse } from "../types/model";
 import { MiraiApi } from "./mirai-api";
 import { MiraiApiWebSocketClient } from "./websocket-client";
+import { ensureMessageChain } from "../utils/message-builder";
+
+/**
+ * Mirai api websocket实现
+ */
 
 export class MiraiApiWebSocketImpl implements MiraiApi {
 
-    constructor(public miraiApiWebSocket: MiraiApiWebSocketClient) { }
+    constructor(public client: MiraiApiWebSocketClient) { }
+
+    /**
+     * 发送websocket包代理方法，并对返回结果进行判断
+     * @param requestBody 
+     * @returns 
+     */
+
+    private async sendRequestForResultAndCheck<T extends WsCommand, C, R>(requestBody: WsRequestBody<T, C>): Promise<WsResponseBody<R>> {
+        const result: WsResponseBody<any> = await this.client.sendRequestForResult(requestBody)
+        if (result.data.code && result.data.code != 0) throw new Error(getMessageFromStatusCode(result.data.code))
+        delete result.data.code
+        delete result.data.msg
+        return result
+    }
+
+    /** EventListenerApi */
+
+    /**
+     * 添加监听器
+     * @param listener 
+     */
+    public addMiraiEventListener(listener: EventListener) {
+        this.client.addMiraiEventListener(listener)
+    }
+
+    /**
+     * 移除监听器
+     * @param listener 
+     */
+    public removeMiraiEventListener(listener: EventListener) {
+        this.client.removeMiraiEventListener(listener)
+    }
+
+    /**
+     * 监听连接开启事件
+     * @param listener 
+     */
+    addOpenListener(listener: () => void): void {
+        this.client.websocket?.addListener("open", listener)
+    }
+
+    /**
+     * 监听连接被关闭事件
+     * @param listener 
+     */
+    addCloseListener(listener: () => void): void {
+        this.client.websocket?.addListener("close", listener)
+    }
+
+    /**
+     * 监听错误事件
+     * @param listener 
+     */
+    addErrorListener(listener: (reason: any) => void): void {
+        this.client.websocket?.addListener("error", listener)
+    }
 
 
+    
     /** PluginApi */
 
     /**
@@ -15,7 +78,7 @@ export class MiraiApiWebSocketImpl implements MiraiApi {
     * data.data: { "version": "v1.0.0" }
     */
     async about(): Promise<PluginInfo> {
-        const reponse: WsResponseBody<MiraiApiResponse<PluginInfo>> = await this.miraiApiWebSocket.sendRequestForResult({
+        const reponse: WsResponseBody<MiraiApiResponse<PluginInfo>> = await this.sendRequestForResultAndCheck({
             command: "about"
         })
         return reponse.data.data!
@@ -29,39 +92,39 @@ export class MiraiApiWebSocketImpl implements MiraiApi {
      * 获取 bot 的资料
      */
     async botProfile(): Promise<BotProfile> {
-        const reponse: WsResponseBody<MiraiApiResponse<BotProfile>> = await this.miraiApiWebSocket.sendRequestForResult({
+        const reponse: WsResponseBody<BotProfile> = await this.sendRequestForResultAndCheck({
             command: "botProfile"
         })
-        return reponse.data.data!
+        return reponse.data
     }
 
     /**
      * 获取 好友 的资料
      */
     async friendProfile(target: number): Promise<FriendProfile> {
-        const reponse: WsResponseBody<MiraiApiResponse<FriendProfile>> = await this.miraiApiWebSocket.sendRequestForResult({
+        const reponse: WsResponseBody<FriendProfile> = await this.sendRequestForResultAndCheck({
             command: "friendProfile",
             content: { target }
         })
-        return reponse.data.data!
+        return reponse.data
     }
 
     /**
      * 获取 群成员 的资料
      */
     async memberProfile(target: number, memberId: number): Promise<MemberProfile> {
-        const reponse: WsResponseBody<MiraiApiResponse<MemberProfile>> = await this.miraiApiWebSocket.sendRequestForResult({
+        const reponse: WsResponseBody<MemberProfile> = await this.sendRequestForResultAndCheck({
             command: "memberProfile",
             content: { target, memberId }
         })
-        return reponse.data.data!
+        return reponse.data
     }
 
     /**
      * 获取 bot 的好友列表
      */
     async friendList(): Promise<FriendList> {
-        const reponse: WsResponseBody<MiraiApiResponse<FriendList>> = await this.miraiApiWebSocket.sendRequestForResult({
+        const reponse: WsResponseBody<MiraiApiResponse<FriendList>> = await this.sendRequestForResultAndCheck({
             command: "friendList"
         })
         return reponse.data.data!
@@ -71,7 +134,7 @@ export class MiraiApiWebSocketImpl implements MiraiApi {
      * 获取 bot 的群列表
      */
     async groupList(): Promise<GroupList> {
-        const reponse: WsResponseBody<MiraiApiResponse<GroupList>> = await this.miraiApiWebSocket.sendRequestForResult({
+        const reponse: WsResponseBody<MiraiApiResponse<GroupList>> = await this.sendRequestForResultAndCheck({
             command: "groupList"
         })
         return reponse.data.data!
@@ -82,7 +145,7 @@ export class MiraiApiWebSocketImpl implements MiraiApi {
      * @param target 指定群的群号
      */
     async memberList(target: number): Promise<MemberList> {
-        const reponse: WsResponseBody<MiraiApiResponse<MemberList>> = await this.miraiApiWebSocket.sendRequestForResult({
+        const reponse: WsResponseBody<MiraiApiResponse<MemberList>> = await this.sendRequestForResultAndCheck({
             command: "memberList",
             content: { target }
         })
@@ -96,12 +159,15 @@ export class MiraiApiWebSocketImpl implements MiraiApi {
      * @param id 获取消息的messageId
      */
     async messageFromId(target: number): Promise<void | MessageEvent> {
-        const reponse: WsResponseBody<MiraiApiResponse<void | MessageEvent>> = await this.miraiApiWebSocket.sendRequestForResult({
+        const reponse: WsResponseBody<MiraiApiResponse<void | MessageEvent>> = await this.sendRequestForResultAndCheck({
             command: "messageFromId",
             content: { target }
         })
         return reponse.data.data
     }
+
+
+    /** ChatMessageApi */
 
     /**
      * 使用此方法向指定好友发送消息
@@ -115,9 +181,9 @@ export class MiraiApiWebSocketImpl implements MiraiApi {
         target: number,
         quote?: number
     ): Promise<MessageReceipt> {
-        const reponse: WsResponseBody<MessageReceipt> = await this.miraiApiWebSocket.sendRequestForResult({
+        const reponse: WsResponseBody<MessageReceipt> = await this.sendRequestForResultAndCheck({
             command: "sendFriendMessage",
-            content: { messageChain, target, quote }
+            content: { messageChain: ensureMessageChain(messageChain), target, quote }
         })
         return reponse.data
     }
@@ -134,9 +200,9 @@ export class MiraiApiWebSocketImpl implements MiraiApi {
         target: number,
         quote?: number
     ): Promise<MessageReceipt> {
-        const reponse: WsResponseBody<MessageReceipt> = await this.miraiApiWebSocket.sendRequestForResult({
+        const reponse: WsResponseBody<MessageReceipt> = await this.sendRequestForResultAndCheck({
             command: "sendGroupMessage",
-            content: { messageChain, target, quote }
+            content: { messageChain: ensureMessageChain(messageChain), target, quote }
         })
         return reponse.data
     }
@@ -154,9 +220,9 @@ export class MiraiApiWebSocketImpl implements MiraiApi {
         group: number,
         quote?: number
     ): Promise<MessageReceipt> {
-        const reponse: WsResponseBody<MessageReceipt> = await this.miraiApiWebSocket.sendRequestForResult({
+        const reponse: WsResponseBody<MessageReceipt> = await this.sendRequestForResultAndCheck({
             command: "sendTempMessage",
-            content: { messageChain, qq, group, quote }
+            content: { messageChain: ensureMessageChain(messageChain), qq, group, quote }
         })
         return reponse.data
     }
@@ -213,7 +279,7 @@ export class MiraiApiWebSocketImpl implements MiraiApi {
         target: number,
         path: string,
         file: File
-    ): Promise<BaseResponse> {
+    ): Promise<void> {
         throw Error("Not yet implement.")
     }
 
@@ -224,37 +290,52 @@ export class MiraiApiWebSocketImpl implements MiraiApi {
      */
     async recall(
         target: number | MessageEvent
-    ): Promise<BaseResponse> {
-        const reponse: WsResponseBody<BaseResponse> = await this.miraiApiWebSocket.sendRequestForResult({
+    ): Promise<void> {
+        await this.sendRequestForResultAndCheck({
             command: "recall",
             content: { target }
         })
-        return reponse.data
     }
 
+    /**
+     * 戳一戳
+     * @param target 戳一戳的目标, QQ号, 可以为 bot QQ号
+     * @param subject 戳一戳接受主体(上下文), 戳一戳信息会发送至该主体, 为群号/好友QQ号
+     * @param kind 上下文类型
+     */
+    async sendNudge(
+        target: number,
+        subject: number,
+        kind: "Friend" | "Group"
+    ): Promise<void> {
+        await this.sendRequestForResultAndCheck({
+            command: "sendNudge",
+            content: { target, subject, kind }
+        })
+    }
+
+    /** GroupManagerApi */
 
     /**
      * 指定群进行全体禁言
      * @param target 指定群的群号
      */
-    async muteAll(target: number): Promise<BaseResponse> {
-        const reponse: WsResponseBody<BaseResponse> = await this.miraiApiWebSocket.sendRequestForResult({
+    async muteAll(target: number): Promise<void> {
+        await this.sendRequestForResultAndCheck({
             command: "muteAll",
             content: { target }
         })
-        return reponse.data
     }
 
     /**
      * 指定群解除全体禁言
      * @param target 指定群的群号
      */
-    async unmuteAll(target: number): Promise<BaseResponse> {
-        const reponse: WsResponseBody<BaseResponse> = await this.miraiApiWebSocket.sendRequestForResult({
+    async unmuteAll(target: number): Promise<void> {
+        await this.sendRequestForResultAndCheck({
             command: "unmuteAll",
             content: { target }
         })
-        return reponse.data
     }
 
     /**
@@ -267,12 +348,11 @@ export class MiraiApiWebSocketImpl implements MiraiApi {
         target: number,
         memberId: number,
         time: number
-    ): Promise<BaseResponse> {
-        const reponse: WsResponseBody<BaseResponse> = await this.miraiApiWebSocket.sendRequestForResult({
+    ): Promise<void> {
+        await this.sendRequestForResultAndCheck({
             command: "mute",
             content: { target, memberId, time }
         })
-        return reponse.data
     }
 
     /**
@@ -283,12 +363,11 @@ export class MiraiApiWebSocketImpl implements MiraiApi {
     async unmute(
         target: number,
         memberId: number
-    ): Promise<BaseResponse> {
-        const reponse: WsResponseBody<BaseResponse> = await this.miraiApiWebSocket.sendRequestForResult({
+    ): Promise<void> {
+        await this.sendRequestForResultAndCheck({
             command: "unmute",
             content: { target, memberId }
         })
-        return reponse.data
     }
 
     /**
@@ -301,12 +380,11 @@ export class MiraiApiWebSocketImpl implements MiraiApi {
         target: number,
         memberId: number,
         msg: string
-    ): Promise<BaseResponse> {
-        const reponse: WsResponseBody<BaseResponse> = await this.miraiApiWebSocket.sendRequestForResult({
+    ): Promise<void> {
+        await this.sendRequestForResultAndCheck({
             command: "kick",
             content: { target, memberId, msg }
         })
-        return reponse.data
     }
 
     /**
@@ -314,12 +392,11 @@ export class MiraiApiWebSocketImpl implements MiraiApi {
      * @param target 群号
      * bot为该群群主时退出失败并返回code 10(无操作权限)
      */
-    async quit(target: number): Promise<BaseResponse> {
-        const reponse: WsResponseBody<BaseResponse> = await this.miraiApiWebSocket.sendRequestForResult({
+    async quit(target: number): Promise<void> {
+        await this.sendRequestForResultAndCheck({
             command: "quit",
             content: { target }
         })
-        return reponse.data
     }
 
     /**
@@ -331,8 +408,8 @@ export class MiraiApiWebSocketImpl implements MiraiApi {
     async groupConfig(
         target: number,
         config?: GroupConfig
-    ): Promise<GroupConfig> {
-        const reponse: WsResponseBody<BaseResponse | GroupConfig> = await this.miraiApiWebSocket.sendRequestForResult({
+    ): Promise<void | GroupConfig> {
+        const reponse: WsResponseBody<void | GroupConfig> = await this.sendRequestForResultAndCheck({
             command: "groupConfig",
             content: { target, config }
         })
@@ -350,16 +427,14 @@ export class MiraiApiWebSocketImpl implements MiraiApi {
         target: number,
         memberId: number,
         info?: MemberInfo
-    ): Promise<BaseResponse | MemberInfo> {
-        const reponse: WsResponseBody<BaseResponse | MemberInfo> = await this.miraiApiWebSocket.sendRequestForResult({
+    ): Promise<void | MemberInfo> {
+        const reponse: WsResponseBody<void | MemberInfo> = await this.sendRequestForResultAndCheck({
             command: "memberInfo",
             content: { target, memberId, info }
         })
         return reponse.data
     }
 
-
-    // 配置相关
     /**
      * 获取 Mangers
      */
@@ -371,34 +446,15 @@ export class MiraiApiWebSocketImpl implements MiraiApi {
      * 设置群精华消息
      * @param target 消息ID
      */
-    async setEssence(target: number): Promise<BaseResponse> {
-        const reponse: WsResponseBody<BaseResponse> = await this.miraiApiWebSocket.sendRequestForResult({
+    async setEssence(target: number): Promise<void> {
+        await this.sendRequestForResultAndCheck({
             command: "setEssence",
             content: { target }
         })
-        return reponse.data
     }
 
-    /**
-     * 戳一戳
-     * @param target 戳一戳的目标, QQ号, 可以为 bot QQ号
-     * @param subject 戳一戳接受主体(上下文), 戳一戳信息会发送至该主体, 为群号/好友QQ号
-     * @param kind 上下文类型
-     */
-    async sendNudge(
-        target: number,
-        subject: number,
-        kind: "Friend" | "Group"
-    ): Promise<BaseResponse> {
-        const reponse: WsResponseBody<BaseResponse> = await this.miraiApiWebSocket.sendRequestForResult({
-            command: "sendNudge",
-            content: { target, subject, kind }
-        })
-        return reponse.data
-    }
+    /** GroupFileManagerApi */
 
-
-    // 群文件管理
     /**
      * 获取群文件列表
      * @param target 指定群的群号
@@ -410,7 +466,7 @@ export class MiraiApiWebSocketImpl implements MiraiApi {
         group?: number,
         qq?: number,
     ): Promise<GroupFile[]> {
-        const reponse: WsResponseBody<GroupFile[]> = await this.miraiApiWebSocket.sendRequestForResult({
+        const reponse: WsResponseBody<GroupFile[]> = await this.sendRequestForResultAndCheck({
             command: "file_list",
             content: { id, target, group, qq }
         })
@@ -428,7 +484,7 @@ export class MiraiApiWebSocketImpl implements MiraiApi {
         group?: number,
         qq?: number,
     ): Promise<GroupFileInfo> {
-        const reponse: WsResponseBody<GroupFileInfo> = await this.miraiApiWebSocket.sendRequestForResult({
+        const reponse: WsResponseBody<GroupFileInfo> = await this.sendRequestForResultAndCheck({
             command: "file_info",
             content: { id, target, group, qq }
         })
@@ -447,12 +503,11 @@ export class MiraiApiWebSocketImpl implements MiraiApi {
         target?: number,
         group?: number,
         qq?: number,
-    ): Promise<BaseResponse> {
-        const reponse: WsResponseBody<BaseResponse> = await this.miraiApiWebSocket.sendRequestForResult({
+    ): Promise<void> {
+        await this.sendRequestForResultAndCheck({
             command: "file_rename",
             content: { id, renameTo, target, group, qq }
         })
-        return reponse.data
     }
 
     /**
@@ -466,12 +521,11 @@ export class MiraiApiWebSocketImpl implements MiraiApi {
         target?: number,
         group?: number,
         qq?: number,
-    ): Promise<BaseResponse> {
-        const reponse: WsResponseBody<BaseResponse> = await this.miraiApiWebSocket.sendRequestForResult({
+    ): Promise<void> {
+        await this.sendRequestForResultAndCheck({
             command: "file_mkdir",
             content: { id, directoryName, target, group, qq }
         })
-        return reponse.data
     }
 
     /**
@@ -487,12 +541,11 @@ export class MiraiApiWebSocketImpl implements MiraiApi {
         target?: number,
         group?: number,
         qq?: number,
-    ): Promise<BaseResponse> {
-        const reponse: WsResponseBody<BaseResponse> = await this.miraiApiWebSocket.sendRequestForResult({
+    ): Promise<void> {
+        await this.sendRequestForResultAndCheck({
             command: "file_move",
             content: { id, moveTo, target, group, qq }
         })
-        return reponse.data
     }
 
     /**
@@ -506,11 +559,10 @@ export class MiraiApiWebSocketImpl implements MiraiApi {
         target?: number,
         group?: number,
         qq?: number,
-    ): Promise<BaseResponse> {
-        const reponse: WsResponseBody<BaseResponse> = await this.miraiApiWebSocket.sendRequestForResult({
+    ): Promise<void> {
+        await this.sendRequestForResultAndCheck({
             command: "file_delete",
             content: { id, target, group, qq }
         })
-        return reponse.data
     }
 }

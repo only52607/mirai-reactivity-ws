@@ -35,3 +35,5 @@ export function getAvatarById(
   }
   return url;
 }
+
+export * from "./api-factory"

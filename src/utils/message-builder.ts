@@ -220,7 +220,7 @@ export default {
 /**
  * 转化为标准的 MessageChain
  */
- export function toMessageChain(
+export function ensureMessageChain(
   messageChain: string | MessageType.SingleMessage | MessageType.MessageChain
 ): MessageType.MessageChain {
   if (typeof messageChain === "string") {

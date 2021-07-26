@@ -1,12 +1,11 @@
-import { ref } from "@vue/reactivity";
 import WebSocket from "isomorphic-ws";
 import { EventListener } from "../types/event";
 import { WsCommand } from "../types/ws/wscommand";
 import { SyncId, WsRequestBody, WsResponseBody, WsSyncRequestBody, WsSyncResponseBody } from "../types/ws/wspacket"
 
-type VerifyKeyAuthentication = { qq: number, verifyKey: string }
-type SessionKeyAuthentication = { sessionKey: string }
-type WsAuthentication = VerifyKeyAuthentication | SessionKeyAuthentication
+type VerifyKeyAuthentication = { qq?: number, verifyKey?: string }
+type SessionKeyAuthentication = { sessionKey?: string }
+type WsAuthentication = VerifyKeyAuthentication & SessionKeyAuthentication
 type AuthenticationResult = { code: number } & SessionKeyAuthentication
 
 export interface MiraiWsConnectParams {
@@ -19,70 +18,82 @@ export interface MiraiApiWebSockettClientOptions {
   reservedSyncId?: SyncId
 }
 
+type PromiseResolve<T> = (value: T | PromiseLike<T>) => void
+type PromiseReject = (reason?: any) => void
+type PromiseHandler<T> = { resolve: PromiseResolve<T>, reject: PromiseReject }
+
+/**
+ * 实现MAH websocket通信的基本类
+ */
 export class MiraiApiWebSocketClient {
   public websocket?: WebSocket
-  private promiseResolvers = new Map<SyncId, ((value: WsResponseBody<any>) => void)>()
-  private authenticateResolver?: ((value: AuthenticationResult) => void)
+  private promiseHandlers = new Map<SyncId, PromiseHandler<WsResponseBody<any>>>()
+  private authenticateHandler?: PromiseHandler<AuthenticationResult>
   private eventListeners = new Set<EventListener>()
-  public isConnect = ref(false)
 
-  constructor(public options?: MiraiApiWebSockettClientOptions) {
-  }
+  constructor(public options?: MiraiApiWebSockettClientOptions) {}
 
   private sendRequestRaw<T extends WsCommand, C>(requestBody: WsSyncRequestBody<T, C>) {
     if (!this.websocket) throw new Error("The websocket instance has not been initialized.")
+    if (this.websocket.readyState != WebSocket.OPEN) throw new Error("The websocket connection has not been opened.")
     this.websocket.send(JSON.stringify(requestBody))
   }
 
-  public addEventListener(listener: EventListener){
+  private buildWsAddress(address: string, authentication: WsAuthentication): string {
+    if (authentication.verifyKey) {
+      return `${address}?verifyKey=${authentication.verifyKey}&qq=${authentication.qq}`
+    }
+    return `${address}?sessionKey=${authentication.sessionKey}`
+  }
+
+  public isAvaliable() {
+    return this.websocket && this.websocket.readyState == WebSocket.OPEN
+  }
+
+  /**
+   * 监听mirai事件
+   * @param listener 
+   */
+  public addMiraiEventListener(listener: EventListener){
     this.eventListeners.add(listener)
   }
 
-  public onClose(listener: (this: WebSocket, code: number, reason: string) => void) {
-    if (!this.websocket) throw new Error("The websocket instance has not been initialized.")
-    this.websocket.on("close", listener)
+  public removeMiraiEventListener(listener: EventListener){
+    this.eventListeners.delete(listener)
   }
 
-  public onError(listener: (this: WebSocket, err: Error) => void) {
-    if (!this.websocket) throw new Error("The websocket instance has not been initialized.")
-    this.websocket.on("error", listener)
-  }
-
+  /**
+   * 发送mah数据包，并等待结果
+   * @param requestBody 
+   * @returns 
+   */
   public sendRequestForResult<T extends WsCommand, C, R>(requestBody: WsRequestBody<T, C>): Promise<WsResponseBody<R>> {
     const syncId = Date.now().toString()
-    let reject: (reason?: any) => void
-    const promise = new Promise<WsResponseBody<R>>((_resolve, _reject) => {
-      this.promiseResolvers.set(syncId, _resolve)
-      reject = _reject
+    // console.log("sending sync id before^", syncId)
+    const promise = new Promise<WsResponseBody<R>>((resolve, reject) => {
+      this.promiseHandlers.set(syncId, { resolve, reject })
     })
     this.sendRequestRaw({syncId, ...requestBody})
+    // console.log("sending sync id after&", syncId)
     setTimeout(()=>{
-      if (this.promiseResolvers.has(syncId)){
-        reject(new Error(`Response timeout waiting for the packet ${syncId}.`))
-        this.promiseResolvers.delete(syncId)
+      if (this.promiseHandlers.has(syncId)){
+        this.promiseHandlers.get(syncId)?.reject(new Error(`Response timeout waiting for the packet ${syncId}.`))
+        this.promiseHandlers.delete(syncId)
       }
     }, this.options?.maxWaitTime ?? 5000)
     return promise
   }
 
   public connect(params: MiraiWsConnectParams): Promise<AuthenticationResult> {
-    const authentication:any = params.authentication
-    const adderss = params.address
-    if (authentication.verifyKey) {
-      this.websocket = new WebSocket(`${adderss}?verifyKey=${authentication.verifyKey}&qq=${authentication.qq}`)
-    } else {
-      this.websocket = new WebSocket(`${adderss}?sessionKey=${authentication.sessionKey}`)
-    }
+    this.websocket = new WebSocket(this.buildWsAddress(params.address, params.authentication))
     this.initWebSocket(this.websocket)
-    let reject: (result: any) => void
-    const promise = new Promise<AuthenticationResult>((_resolve, _reject) => {
-      this.authenticateResolver = _resolve
-      reject = _reject
+    const promise = new Promise<AuthenticationResult>((resolve, reject) => {
+      this.authenticateHandler = { resolve, reject }
     })
-    setTimeout(()=>{
-      if (this.authenticateResolver){
-        reject(new Error(`Response timeout waiting for connection.`))
-        this.authenticateResolver = undefined
+    setTimeout(() => {
+      if (this.authenticateHandler){
+        this.authenticateHandler?.reject(new Error(`Response timeout waiting for connection.`))
+        this.authenticateHandler = undefined
       }
     }, this.options?.maxWaitTime ?? 5000)
     return promise
@@ -91,35 +102,42 @@ export class MiraiApiWebSocketClient {
   public disconnect() {
     if (!this.websocket) throw new Error("The websocket instance has not been initialized.")
     this.websocket.close()
-    this.isConnect.value = false
   }
 
   private initWebSocket(websocket: WebSocket) {
     const SYNC_ID_OPEN = ""
     const SYNC_ID_DEFAULT = "-1"
-    websocket.onopen = (event: WebSocket.OpenEvent) => {}
     websocket.onmessage = (event: WebSocket.MessageEvent) => {
       const body = JSON.parse(event.data.toString()) as WsSyncResponseBody<any>
       switch (body.syncId) {
-        case SYNC_ID_OPEN:
-          if (this.authenticateResolver) this.authenticateResolver(body.data)
-          this.promiseResolvers.clear()
+        case SYNC_ID_OPEN:    // 完成验证
+          if (this.authenticateHandler) this.authenticateHandler?.resolve(body.data)
+          this.promiseHandlers.clear()
           this.eventListeners.clear()
-          this.authenticateResolver = undefined
-          this.isConnect.value = true
+          this.authenticateHandler = undefined
           break
-        case this.options?.reservedSyncId ?? SYNC_ID_DEFAULT:
+        case this.options?.reservedSyncId ?? SYNC_ID_DEFAULT:   // 事件包
           this.eventListeners.forEach((listener)=>{
             listener(body.data)
           })
           break
-        default:
-          const resolver = this.promiseResolvers.get(body.syncId)
+        default:  // 请求结果包
+          const resolver = this.promiseHandlers.get(body.syncId)?.resolve
           if (resolver) {
             resolver({data: body.data})
           }
-          this.promiseResolvers.delete(body.syncId)
+          this.promiseHandlers.delete(body.syncId)
       }
     }
+    websocket.addEventListener("close", () => {
+      if (this.authenticateHandler) {
+        this.authenticateHandler.reject(new Error("Connect failed. (parameter error)"))
+      }
+    })
+    websocket.addEventListener("error", (event) => {
+      if (this.authenticateHandler) {
+        this.authenticateHandler.reject(event.error)
+      }
+    })
   }
 }

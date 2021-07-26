@@ -1,5 +1,9 @@
 import { WsCommand, WsSubCommand } from "./wscommand";
 
+/**
+ * MAH websocket基本包格式
+ */
+
 export type SyncId = string
 
 export interface WsRequestBody<T extends WsCommand, C> {

@@ -1,10 +1,42 @@
-import { BotProfile, File, FriendProfile, GroupConfig, MemberInfo, MemberProfile, MessageChain, MessageEvent, MessageReceipt } from "../types";
+import { BotProfile, EventListener, File, FriendProfile, GroupConfig, MemberInfo, MemberProfile, MessageChain, MessageEvent, MessageReceipt } from "../types";
 import { PluginInfo, FriendList, GroupFile, GroupFileInfo, GroupList, MemberList, UploadImageReceipt, UploadVoiceReceipt } from "../types/model";
 
 
 /**
- * Mirai 接口定义
+ * Mirai 基本api接口定义
  */
+
+interface EventListenerApi {
+    /**
+     * 添加监听器
+     * @param listener 
+     */
+    addMiraiEventListener(listener: EventListener): void
+
+    /**
+     * 移除监听器
+     * @param listener 
+     */
+    removeMiraiEventListener(listener: EventListener): void
+
+    /**
+     * 监听连接开启事件
+     * @param listener 
+     */
+    addOpenListener(listener: () => void):void
+
+    /**
+     * 监听连接被关闭事件
+     * @param listener 
+     */
+    addCloseListener(listener: () => void):void
+
+    /**
+     * 监听错误事件
+     * @param listener 
+     */
+    addErrorListener(listener: (reason: any) => void):void
+}
 
 interface EventProcessApi {
 }
@@ -47,7 +79,7 @@ interface MessageTempStoreApi {
          * 通过 messageId 获取一条被缓存的消息
          * @param id 获取消息的messageId
          */
-    messageFromId(id: number): Promise<void | MessageEvent>;
+    messageFromId(id: number): Promise<undefined | MessageEvent>;
 }
 
 interface ChatMessageApi {
@@ -225,7 +257,7 @@ interface GroupManagerApi {
     groupConfig(
         target: number,
         config?: GroupConfig
-    ): Promise<GroupConfig>
+    ): Promise<undefined | GroupConfig>
 
     /**
      * 传入 info 时，修改群员资料
@@ -238,7 +270,7 @@ interface GroupManagerApi {
         target: number,
         memberId: number,
         info?: MemberInfo
-    ): Promise<MemberInfo>
+    ): Promise<undefined | MemberInfo>
 
     /**
      * 获取 Managers
@@ -341,5 +373,5 @@ interface PluginApi {
     about(): Promise<PluginInfo>;
 }
 
-export interface MiraiApi extends GroupManagerApi, GroupFileManagerApi, EventProcessApi, AccountInfoApi, MessageTempStoreApi, ChatMessageApi, PluginApi {
+export interface MiraiApi extends EventListenerApi, GroupManagerApi, GroupFileManagerApi, EventProcessApi, AccountInfoApi, MessageTempStoreApi, ChatMessageApi, PluginApi {
 }

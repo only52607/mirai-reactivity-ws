@@ -1,6 +1,4 @@
-import { BaseResponse } from "./api-response";
-
-export interface PluginInfo extends BaseResponse {
+export interface PluginInfo {
     data: {
         version: string;
     };
