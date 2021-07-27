@@ -63,6 +63,12 @@ export interface Member extends BaseUser {
    * 所在的群
    */
   group: Group;
+
+  specialTitle: string;
+
+  joinTimestamp: number;
+  lastSpeakTimestamp: number;
+  muteTimeRemaining: number;
 }
 
 export type User = Friend | Member;

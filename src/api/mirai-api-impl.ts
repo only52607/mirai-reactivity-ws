@@ -158,8 +158,8 @@ export class MiraiApiWebSocketImpl implements MiraiApi {
      * 通过 messageId 获取一条被缓存的消息
      * @param id 获取消息的messageId
      */
-    async messageFromId(target: number): Promise<void | MessageEvent> {
-        const reponse: WsResponseBody<MiraiApiResponse<void | MessageEvent>> = await this.sendRequestForResultAndCheck({
+    async messageFromId(target: number): Promise<undefined | MessageEvent> {
+        const reponse: WsResponseBody<MiraiApiResponse<undefined | MessageEvent>> = await this.sendRequestForResultAndCheck({
             command: "messageFromId",
             content: { target }
         })
@@ -408,8 +408,8 @@ export class MiraiApiWebSocketImpl implements MiraiApi {
     async groupConfig(
         target: number,
         config?: GroupConfig
-    ): Promise<void | GroupConfig> {
-        const reponse: WsResponseBody<void | GroupConfig> = await this.sendRequestForResultAndCheck({
+    ): Promise<undefined | GroupConfig> {
+        const reponse: WsResponseBody<undefined | GroupConfig> = await this.sendRequestForResultAndCheck({
             command: "groupConfig",
             content: { target, config }
         })
@@ -427,8 +427,8 @@ export class MiraiApiWebSocketImpl implements MiraiApi {
         target: number,
         memberId: number,
         info?: MemberInfo
-    ): Promise<void | MemberInfo> {
-        const reponse: WsResponseBody<void | MemberInfo> = await this.sendRequestForResultAndCheck({
+    ): Promise<undefined | MemberInfo> {
+        const reponse: WsResponseBody<undefined | MemberInfo> = await this.sendRequestForResultAndCheck({
             command: "memberInfo",
             content: { target, memberId, info }
         })
