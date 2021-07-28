@@ -8,5 +8,6 @@ export function useMiraiApi() {
 }
 
 export function setDefaultMiraiApi(miraiApi: MiraiApi) {
+    defaultMiraiApi.value = undefined   // 触发更新
     defaultMiraiApi.value = miraiApi
 }
