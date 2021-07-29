@@ -37,3 +37,4 @@ export function getAvatarById(
 }
 
 export * from "./api-factory"
+export * from "./message-builder"

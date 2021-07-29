@@ -17,9 +17,7 @@ export function useBotProfile() {
     }
     if (!usedBotProfile) {
         effect(() => miraiApi.value != undefined, { scheduler })
-        if (miraiApi.value != undefined) {
-            scheduler()
-        }
+        scheduler()
         usedBotProfile = true
     }
     return {
@@ -41,9 +39,7 @@ export function useFriendProfile(target: number | Ref<Optional<number>>) {
         state.value = "done"
     }
     effect(() => [miraiApi.value != undefined, unref(target)], { scheduler })
-    if (miraiApi.value != undefined) {
-        scheduler()
-    }
+    scheduler()
     return {
         profile: profileRef,
         state,
@@ -64,9 +60,7 @@ export function useMemberProfile(target: number | Ref<Optional<number>>, memberI
         state.value = "done"
     }
     effect(() => [miraiApi.value != undefined, unref(target), unref(memberId)], { scheduler })
-    if (miraiApi.value != undefined) {
-        scheduler()
-    }
+    scheduler()
     return {
         profile: profileRef,
         state,

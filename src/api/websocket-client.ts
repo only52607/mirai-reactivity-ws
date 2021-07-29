@@ -1,5 +1,6 @@
 import WebSocket from "isomorphic-ws";
-import { EventListener } from "../types/event";
+import { getMessageFromStatusCode } from "../utils/status";
+import { Event, EventListener } from "../types/event";
 import { WsCommand } from "../types/ws/wscommand";
 import { SyncId, WsRequestBody, WsResponseBody, WsSyncRequestBody, WsSyncResponseBody } from "../types/ws/wspacket"
 
@@ -31,7 +32,7 @@ export class MiraiApiWebSocketClient {
   private authenticateHandler?: PromiseHandler<AuthenticationResult>
   private eventListeners = new Set<EventListener>()
 
-  constructor(public options?: MiraiApiWebSockettClientOptions) {}
+  constructor(public options?: MiraiApiWebSockettClientOptions) { }
 
   private sendRequestRaw<T extends WsCommand, C>(requestBody: WsSyncRequestBody<T, C>) {
     if (!this.websocket) throw new Error("The websocket instance has not been initialized.")
@@ -54,12 +55,25 @@ export class MiraiApiWebSocketClient {
    * 监听mirai事件
    * @param listener 
    */
-  public addMiraiEventListener(listener: EventListener){
+  public addMiraiEventListener(listener: EventListener) {
     this.eventListeners.add(listener)
   }
 
-  public removeMiraiEventListener(listener: EventListener){
+  /**
+   * 移除监听器
+   * @param listener 
+   */
+  public removeMiraiEventListener(listener: EventListener) {
     this.eventListeners.delete(listener)
+  }
+
+  /**
+   * 主动触发事件
+   */
+  public emitMiraiEvent(event: Event) {
+    this.eventListeners.forEach((listener) => {
+      listener(event)
+    })
   }
 
   /**
@@ -73,10 +87,11 @@ export class MiraiApiWebSocketClient {
     const promise = new Promise<WsResponseBody<R>>((resolve, reject) => {
       this.promiseHandlers.set(syncId, { resolve, reject })
     })
-    this.sendRequestRaw({syncId, ...requestBody})
+    this.sendRequestRaw({ syncId, ...requestBody })
     // console.log("sending sync id after&", syncId)
-    setTimeout(()=>{
-      if (this.promiseHandlers.has(syncId)){
+    // 超时处理
+    setTimeout(() => {
+      if (this.promiseHandlers.has(syncId)) {
         this.promiseHandlers.get(syncId)?.reject(new Error(`Response timeout waiting for the packet ${syncId}.`))
         this.promiseHandlers.delete(syncId)
       }
@@ -90,8 +105,9 @@ export class MiraiApiWebSocketClient {
     const promise = new Promise<AuthenticationResult>((resolve, reject) => {
       this.authenticateHandler = { resolve, reject }
     })
+    // 超时处理
     setTimeout(() => {
-      if (this.authenticateHandler){
+      if (this.authenticateHandler) {
         this.authenticateHandler?.reject(new Error(`Response timeout waiting for connection.`))
         this.authenticateHandler = undefined
       }
@@ -110,28 +126,37 @@ export class MiraiApiWebSocketClient {
     websocket.onmessage = (event: WebSocket.MessageEvent) => {
       const body = JSON.parse(event.data.toString()) as WsSyncResponseBody<any>
       switch (body.syncId) {
-        case SYNC_ID_OPEN:    // 完成验证
+        case SYNC_ID_OPEN:    // 验证返回包
           if (this.authenticateHandler) this.authenticateHandler?.resolve(body.data)
           this.promiseHandlers.clear()
           this.eventListeners.clear()
           this.authenticateHandler = undefined
           break
         case this.options?.reservedSyncId ?? SYNC_ID_DEFAULT:   // 事件包
-          this.eventListeners.forEach((listener)=>{
+          // 分发事件
+          this.eventListeners.forEach((listener) => {
             listener(body.data)
           })
           break
         default:  // 请求结果包
+          if (this.authenticateHandler) {   // 当验证失败时，该版本ws服务端会返回 { code: number, msg: string } 的消息，需要特殊处理。
+            const anyBody = body as any
+            if (anyBody.code != undefined && anyBody.msg != undefined) {
+              this.authenticateHandler.reject(new Error(getMessageFromStatusCode(anyBody.code)))
+            }
+            break
+          }
+          // 回调请求结果
           const resolver = this.promiseHandlers.get(body.syncId)?.resolve
           if (resolver) {
-            resolver({data: body.data})
+            resolver({ data: body.data })
           }
           this.promiseHandlers.delete(body.syncId)
       }
     }
     websocket.addEventListener("close", () => {
       if (this.authenticateHandler) {
-        this.authenticateHandler.reject(new Error("Connect failed. (parameter error)"))
+        this.authenticateHandler.reject(new Error("Connect failed. (Parameter error)"))
       }
     })
     websocket.addEventListener("error", (event) => {

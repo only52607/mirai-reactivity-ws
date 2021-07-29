@@ -17,9 +17,7 @@ export function useFriends() {
     }
     if (!usedFriends) {
         effect(() => miraiApi.value != undefined, { scheduler })
-        if (miraiApi.value != undefined) {
-            scheduler()
-        }
+        scheduler()
         usedFriends = true
     }
     return {
@@ -42,9 +40,7 @@ export function useGroups() {
     }
     if (!usedGroups) {
         effect(() => miraiApi.value != undefined, { scheduler })
-        if (miraiApi.value != undefined) {
-            scheduler()
-        }
+        scheduler()
         usedGroups = true
     }
     return {
@@ -67,9 +63,7 @@ export function useMemberList(target: number | Ref<Optional<number>>) {
         state.value = "done"
     }
     effect(() => [miraiApi.value != undefined, unref(target)], { scheduler })
-    if (miraiApi.value != undefined) {
-        scheduler()
-    }
+    scheduler()
     return {
         members: listRef,
         state,

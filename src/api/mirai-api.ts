@@ -1,4 +1,4 @@
-import { BotProfile, EventListener, File, FriendProfile, GroupConfig, MemberInfo, MemberProfile, MessageChain, MessageEvent, MessageReceipt } from "../types";
+import { BotProfile, Event, EventListener, File, FriendProfile, GroupConfig, MemberInfo, MemberProfile, MessageChain, MessageEvent, MessageReceipt } from "../types";
 import { PluginInfo, FriendList, GroupFile, GroupFileInfo, GroupList, MemberList, UploadImageReceipt, UploadVoiceReceipt } from "../types/model";
 
 
@@ -23,19 +23,24 @@ interface EventListenerApi {
      * 监听连接开启事件
      * @param listener 
      */
-    addOpenListener(listener: () => void):void
+    addOpenListener(listener: () => void): void
 
     /**
      * 监听连接被关闭事件
      * @param listener 
      */
-    addCloseListener(listener: () => void):void
+    addCloseListener(listener: () => void): void
 
     /**
      * 监听错误事件
      * @param listener 
      */
-    addErrorListener(listener: (reason: any) => void):void
+    addErrorListener(listener: (reason: any) => void): void
+
+    /**
+     * 主动触发事件
+     */
+    emitEvent(event: Event): void
 }
 
 interface EventProcessApi {

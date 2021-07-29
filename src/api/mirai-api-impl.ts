@@ -1,5 +1,5 @@
 import { getMessageFromStatusCode } from "../utils/status";
-import { BotProfile, EventListener, File, FriendProfile, GroupConfig, MemberInfo, MemberProfile, MessageChain, MessageEvent, MessageReceipt, WsCommand, WsRequestBody, WsResponseBody } from "../types";
+import { BotProfile, Event, EventListener, File, FriendProfile, GroupConfig, MemberInfo, MemberProfile, MessageChain, MessageEvent, MessageReceipt, WsCommand, WsRequestBody, WsResponseBody } from "../types";
 import { PluginInfo, FriendList, GroupFile, GroupFileInfo, GroupList, MemberList, UploadImageReceipt, UploadVoiceReceipt, MiraiApiResponse } from "../types/model";
 import { MiraiApi } from "./mirai-api";
 import { MiraiApiWebSocketClient } from "./websocket-client";
@@ -69,7 +69,12 @@ export class MiraiApiWebSocketImpl implements MiraiApi {
         this.client.websocket?.addListener("error", listener)
     }
 
-
+    /**
+     * 主动触发事件
+     */
+    emitEvent(event: Event): void {
+        this.client.emitMiraiEvent(event)
+    }
     
     /** PluginApi */
 
