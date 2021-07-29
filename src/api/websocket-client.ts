@@ -31,8 +31,13 @@ export class MiraiApiWebSocketClient {
   private promiseHandlers = new Map<SyncId, PromiseHandler<WsResponseBody<any>>>()
   private authenticateHandler?: PromiseHandler<AuthenticationResult>
   private eventListeners = new Set<EventListener>()
+  private currentSyncId:number = parseInt(Date.now().toString())
 
   constructor(public options?: MiraiApiWebSockettClientOptions) { }
+
+  private getCurrentSyncIdAndIncrease() {
+    return this.currentSyncId++
+  }
 
   private sendRequestRaw<T extends WsCommand, C>(requestBody: WsSyncRequestBody<T, C>) {
     if (!this.websocket) throw new Error("The websocket instance has not been initialized.")
@@ -82,7 +87,7 @@ export class MiraiApiWebSocketClient {
    * @returns 
    */
   public sendRequestForResult<T extends WsCommand, C, R>(requestBody: WsRequestBody<T, C>): Promise<WsResponseBody<R>> {
-    const syncId = Date.now().toString()
+    const syncId = this.getCurrentSyncIdAndIncrease().toString()
     // console.log("sending sync id before^", syncId)
     const promise = new Promise<WsResponseBody<R>>((resolve, reject) => {
       this.promiseHandlers.set(syncId, { resolve, reject })
