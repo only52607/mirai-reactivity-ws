@@ -50,7 +50,7 @@ export class MiraiApiWebSocketImpl implements MiraiApi {
      * @param listener 
      */
     addOpenListener(listener: () => void): void {
-        this.client.websocket?.addListener("open", listener)
+        this.client.websocket?.addEventListener("open", listener)
     }
 
     /**
@@ -58,7 +58,7 @@ export class MiraiApiWebSocketImpl implements MiraiApi {
      * @param listener 
      */
     addCloseListener(listener: () => void): void {
-        this.client.websocket?.addListener("close", listener)
+        this.client.websocket?.addEventListener("close", listener)
     }
 
     /**
@@ -66,7 +66,7 @@ export class MiraiApiWebSocketImpl implements MiraiApi {
      * @param listener 
      */
     addErrorListener(listener: (reason: any) => void): void {
-        this.client.websocket?.addListener("error", listener)
+        this.client.websocket?.addEventListener("error", listener)
     }
 
     /**
