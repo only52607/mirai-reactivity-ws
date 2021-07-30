@@ -14,7 +14,7 @@ export interface MiraiWsConnectParams {
   authentication: WsAuthentication
 }
 
-export interface MiraiApiWebSockettClientOptions {
+export interface MiraiApiWebSocketClientOptions {
   maxWaitTime?: number
   reservedSyncId?: SyncId
 }
@@ -33,7 +33,7 @@ export class MiraiApiWebSocketClient {
   private eventListeners = new Set<EventListener>()
   private currentSyncId:number = parseInt(Date.now().toString())
 
-  constructor(public options?: MiraiApiWebSockettClientOptions) { }
+  constructor(public options?: MiraiApiWebSocketClientOptions) { }
 
   private getCurrentSyncIdAndIncrease() {
     return this.currentSyncId++
