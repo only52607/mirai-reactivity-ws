@@ -10,7 +10,11 @@ let usedBotProfile = false
 
 export function useBotProfile() {
     async function scheduler() {
-        if (!miraiApi.value) return
+        if (!miraiApi.value) {
+            botProfileRef.value = undefined
+            botProfileState.value = "pending"
+            return
+        }
         botProfileState.value = "loading"
         botProfileRef.value = await miraiApi.value.botProfile()
         botProfileState.value = "done"
@@ -31,7 +35,11 @@ export function useFriendProfile(target: number | Ref<Optional<number>>) {
     const profileRef: Ref<Optional<FriendProfile>> = ref()
     const state: Ref<ReactivityState> = ref("pending")
     async function scheduler() {
-        if (!miraiApi.value) return
+        if (!miraiApi.value)  {
+            profileRef.value = undefined
+            state.value = "pending"
+            return
+        }
         const unrefTarget = unref(target)
         if (!unrefTarget) return
         state.value = "loading"
@@ -51,10 +59,18 @@ export function useMemberProfile(target: number | Ref<Optional<number>>, memberI
     const profileRef: Ref<Optional<MemberInfo>> = ref()
     const state: Ref<ReactivityState> = ref("pending")
     async function scheduler() {
-        if (!miraiApi.value) return
+        if (!miraiApi.value)  {
+            profileRef.value = undefined
+            state.value = "pending"
+            return
+        }
         const unrefTarget = unref(target)
         const unrefMemberId = unref(memberId)
-        if (!unrefTarget || !unrefMemberId) return
+        if (!unrefTarget || !unrefMemberId) {
+            profileRef.value = undefined
+            state.value = "pending"
+            return
+        }
         state.value = "loading"
         profileRef.value = await miraiApi.value.memberInfo(unrefTarget, unrefMemberId)
         state.value = "done"

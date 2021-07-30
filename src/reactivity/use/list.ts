@@ -10,7 +10,11 @@ let usedFriends = false
 
 export function useFriends() {
     async function scheduler() {
-        if (!miraiApi.value) return
+        if (!miraiApi.value) {
+            friendsState.value = "pending"
+            friendsRef.value = undefined
+            return
+        }
         friendsState.value = "loading"
         friendsRef.value = await miraiApi.value.friendList()
         friendsState.value = "done"
@@ -33,7 +37,11 @@ let usedGroups = false
 
 export function useGroups() {
     async function scheduler() {
-        if (!miraiApi.value) return
+        if (!miraiApi.value) {
+            groupsState.value = "pending"
+            groupsRef.value = undefined
+            return
+        }
         groupsState.value = "loading"
         groupsRef.value = await miraiApi.value.groupList()
         groupsState.value = "done"
@@ -55,9 +63,17 @@ export function useMemberList(target: number | Ref<Optional<number>>) {
     const listRef: Ref<Optional<Member[]>> = ref()
     const state: Ref<ReactivityState> = ref("pending")
     async function scheduler() {
-        if (!miraiApi.value) return
+        if (!miraiApi.value) {
+            state.value = "pending"
+            listRef.value = undefined
+            return
+        }
         const unrefTarget = unref(target)
-        if (!unrefTarget) return
+        if (!unrefTarget) {
+            state.value = "pending"
+            listRef.value = undefined
+            return
+        }
         state.value = "loading"
         listRef.value = await miraiApi.value.memberList(unrefTarget)
         state.value = "done"

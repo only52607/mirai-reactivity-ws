@@ -13,13 +13,15 @@ export function setDefaultMiraiApi(miraiApi: MiraiApi) {
     defaultMiraiApi.value = miraiApi
 }
 
-
 const pluginInfoRef: Ref<Optional<PluginInfo>> = ref()   // 全局好友列表响应体
 let usedPluginInfoRef = false
 
 export function usePluginInfo() {
     async function scheduler() {
-        if (!defaultMiraiApi.value) return
+        if (!defaultMiraiApi.value) {
+            pluginInfoRef.value = undefined
+            return
+        }
         pluginInfoRef.value = await defaultMiraiApi.value.about()
     }
     if (!usedPluginInfoRef) {
