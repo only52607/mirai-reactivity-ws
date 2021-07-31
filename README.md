@@ -1,4 +1,6 @@
 # mirai-reactivity-ws
+[![npm](https://img.shields.io/npm/v/mirai-reactivity-ws)](https://www.npmjs.com/package/mirai-reactivity-ws)
+[![GitHub](https://img.shields.io/github/license/only52607/mirai-reactivity-ws)](https://github.com/only52607/mirai-reactivity-ws)
 
 vue3 composition响应式风格 [mah](https://github.com/project-mirai/mirai-api-http)  websocket客户端实现，支持浏览器和nodejs。
 
