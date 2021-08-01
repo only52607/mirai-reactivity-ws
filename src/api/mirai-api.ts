@@ -1,5 +1,5 @@
-import { BotProfile, Event, EventListener, File, FriendProfile, GroupConfig, MemberInfo, MemberProfile, MessageChain, MessageEvent, MessageReceipt } from "../types";
-import { PluginInfo, FriendList, GroupFile, GroupFileInfo, GroupList, MemberList, UploadImageReceipt, UploadVoiceReceipt } from "../types/model";
+import { BotProfile, Event, EventListener, File, FriendProfile, GroupConfig, MemberProfile, MessageChain, MessageEvent, MessageReceipt } from "../types";
+import { PluginInfo, FriendList, GroupFile, GroupFileInfo, GroupList, MemberList, UploadImageReceipt, UploadVoiceReceipt, Member } from "../types/model";
 
 
 /**
@@ -274,8 +274,8 @@ interface GroupManagerApi {
     memberInfo(
         target: number,
         memberId: number,
-        info?: MemberInfo
-    ): Promise<undefined | MemberInfo>
+        info?: Member
+    ): Promise<undefined | Member>
 
     /**
      * 获取 Managers

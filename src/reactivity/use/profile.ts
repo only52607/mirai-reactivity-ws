@@ -1,5 +1,5 @@
 import { effect, Ref, ref, unref } from "@vue/reactivity"
-import { BotProfile, FriendProfile, MemberInfo, Optional, ReactivityState } from "../../types"
+import { BotProfile, FriendProfile, Member, Optional, ReactivityState } from "../../types"
 import { useMiraiApi } from "./mirai-api"
 
 const miraiApi = useMiraiApi()
@@ -56,7 +56,7 @@ export function useFriendProfile(target: number | Ref<Optional<number>>) {
 }
 
 export function useMemberProfile(target: number | Ref<Optional<number>>, memberId: number | Ref<Optional<number>>) {
-    const profileRef: Ref<Optional<MemberInfo>> = ref()
+    const profileRef: Ref<Optional<Member>> = ref()
     const state: Ref<ReactivityState> = ref("pending")
     async function scheduler() {
         if (!miraiApi.value)  {

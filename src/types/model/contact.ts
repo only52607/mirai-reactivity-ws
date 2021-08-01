@@ -63,11 +63,21 @@ export interface Member extends BaseUser {
    * 所在的群
    */
   group: Group;
-
+  /**
+   * 群头衔
+   */
   specialTitle: string;
-
+  /**
+   * 加群时间
+   */
   joinTimestamp: number;
+  /**
+   * 上次发言时间
+   */
   lastSpeakTimestamp: number;
+  /**
+   * 禁言剩余时间
+   */
   muteTimeRemaining: number;
 }
 

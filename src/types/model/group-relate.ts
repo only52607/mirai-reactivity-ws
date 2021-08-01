@@ -34,20 +34,6 @@ export interface GroupConfig {
 }
 
 /**
- * 群员信息
- */
-export interface MemberInfo {
-  /**
-   * 群名片
-   */
-  name?: string;
-  /**
-   * 群头衔
-   */
-  specialTitle?: string;
-}
-
-/**
  * 群文件
  */
 export interface GroupFile {

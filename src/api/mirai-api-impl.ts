@@ -1,6 +1,6 @@
 import { getMessageFromStatusCode } from "../utils/status";
-import { BotProfile, Event, EventListener, File, FriendProfile, GroupConfig, MemberInfo, MemberProfile, MessageChain, MessageEvent, MessageReceipt, WsCommand, WsRequestBody, WsResponseBody } from "../types";
-import { PluginInfo, FriendList, GroupFile, GroupFileInfo, GroupList, MemberList, UploadImageReceipt, UploadVoiceReceipt, MiraiApiResponse } from "../types/model";
+import { BotProfile, Event, EventListener, File, FriendProfile, GroupConfig, MemberProfile, MessageChain, MessageEvent, MessageReceipt, WsCommand, WsRequestBody, WsResponseBody } from "../types";
+import { PluginInfo, FriendList, GroupFile, GroupFileInfo, GroupList, MemberList, UploadImageReceipt, UploadVoiceReceipt, MiraiApiResponse, Member } from "../types/model";
 import { MiraiApi } from "./mirai-api";
 import { MiraiApiWebSocketClient } from "./websocket-client";
 import { ensureMessageChain } from "../utils/message-builder";
@@ -431,9 +431,9 @@ export class MiraiApiWebSocketImpl implements MiraiApi {
     async memberInfo(
         target: number,
         memberId: number,
-        info?: MemberInfo
-    ): Promise<undefined | MemberInfo> {
-        const reponse: WsResponseBody<undefined | MemberInfo> = await this.sendRequestForResultAndCheck({
+        info?: Member
+    ): Promise<undefined | Member> {
+        const reponse: WsResponseBody<undefined | Member> = await this.sendRequestForResultAndCheck({
             command: "memberInfo",
             content: { target, memberId, info }
         })
