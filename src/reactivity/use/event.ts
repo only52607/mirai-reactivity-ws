@@ -25,6 +25,7 @@ const eventDispatcher = (event: Event) => {
 }
 
 let isInit = false
+
 effect(() => {
     if (isInit || !miraiApi.value) return
     miraiApi.value.addMiraiEventListener(eventDispatcher)
