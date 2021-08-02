@@ -1,5 +1,5 @@
 import { getMessageFromStatusCode } from "../utils/status";
-import { BotProfile, Event, EventListener, File, FriendProfile, GroupConfig, MemberProfile, MessageChain, MessageEvent, MessageReceipt, WsCommand, WsRequestBody, WsResponseBody } from "../types";
+import { BotInvitedJoinGroupRequestEventReceipt, BotProfile, Event, EventListener, File, FriendProfile, GroupConfig, MemberJoinRequestEventReceipt, MemberProfile, MessageChain, MessageEvent, MessageReceipt, NewFriendRequestEventReceipt, WsCommand, WsRequestBody, WsResponseBody } from "../types";
 import { PluginInfo, FriendList, GroupFile, GroupFileInfo, GroupList, MemberList, UploadImageReceipt, UploadVoiceReceipt, MiraiApiResponse, Member } from "../types/model";
 import { MiraiApi } from "./mirai-api";
 import { MiraiApiWebSocketClient } from "./websocket-client";
@@ -75,7 +75,41 @@ export class MiraiApiWebSocketImpl implements MiraiApi {
     emitEvent(event: Event): void {
         this.client.emitMiraiEvent(event)
     }
+
     
+    /** EventProcessApi */
+
+    /**
+     * 处理 添加好友申请事件(NewFriendRequestEvent)
+     */
+    async processNewFriendRequestEvent(receipt: NewFriendRequestEventReceipt): Promise<void> {
+        await this.sendRequestForResultAndCheck({
+            command: "resp_newFriendRequestEvent",
+            content: receipt
+        })
+    }
+
+    /**
+     * 处理 用户入群申请事件(MemberJoinRequestEvent)
+     */
+    async processMemberJoinRequestEvent(receipt: MemberJoinRequestEventReceipt): Promise<void> {
+        await this.sendRequestForResultAndCheck({
+            command: "resp_memberJoinRequestEvent",
+            content: receipt
+        })
+    }
+
+    /**
+     * 处理 Bot被邀请入群申请事件(BotInvitedJoinGroupRequestEvent)
+     */
+    async processBotInvitedJoinGroupRequestEvent(receipt: BotInvitedJoinGroupRequestEventReceipt): Promise<void> {
+        await this.sendRequestForResultAndCheck({
+            command: "resp_botInvitedJoinGroupRequestEvent",
+            content: receipt
+        })
+    }
+
+
     /** PluginApi */
 
     /**

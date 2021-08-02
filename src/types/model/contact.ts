@@ -3,40 +3,12 @@
  * @packageDocumentation
  */
 
-export type Permission = "OWNER" | "ADMINISTRATOR" | "MEMBER";
-
-/**
- * 群的信息
- */
-export interface Group {
-  /**
-   * 群号
-   */
-  id: number;
-  /**
-   * 群的群名称
-   */
-  name: string;
-  /**
-   * 群中，Bot的群限权
-   */
-  permission: Permission;
-}
-
-/**
- * 基础用户信息
- */
-interface BaseUser {
-  /**
-   * QQ 号
-   */
-  id: number;
-}
+import { NumeralIdentifiableEntity } from "./base";
 
 /**
  * 好友信息类型
  */
-export interface Friend extends BaseUser {
+export interface Friend extends NumeralIdentifiableEntity {
   /**
    * 用户昵称
    */
@@ -50,7 +22,7 @@ export interface Friend extends BaseUser {
 /**
  * 群成员信息类型
  */
-export interface Member extends BaseUser {
+export interface Member extends NumeralIdentifiableEntity {
   /**
    * 群名片
    */
@@ -58,7 +30,7 @@ export interface Member extends BaseUser {
   /**
    * 群权限 OWNER、ADMINISTRATOR或MEMBER
    */
-  permission: Permission;
+  permission: "OWNER" | "ADMINISTRATOR" | "MEMBER";
   /**
    * 所在的群
    */
@@ -81,10 +53,30 @@ export interface Member extends BaseUser {
   muteTimeRemaining: number;
 }
 
+/**
+ * 群的信息
+ */
+ export interface Group extends NumeralIdentifiableEntity {
+  /**
+   * 群号
+   */
+  id: number;
+  /**
+   * 群的群名称
+   */
+  name: string;
+  /**
+   * 群中，Bot的群限权
+   */
+  permission: Member["permission"];
+}
+
 export type User = Friend | Member;
 
 export type FriendList = Friend[];
+
 export type GroupList = Group[];
+
 export type MemberList = Member[];
 
 export interface UserProfile {
@@ -101,3 +93,5 @@ export interface BotProfile extends UserProfile {}
 export interface FriendProfile extends UserProfile {}
 
 export interface MemberProfile extends UserProfile {}
+
+export interface Bot extends BotProfile, NumeralIdentifiableEntity {}

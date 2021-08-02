@@ -1,71 +1,60 @@
-import * as Contact from "../model/contact";
+import { Bot, Friend, Group, Member, User } from "../model/contact";
 import { MessageChain, MessageReceipt, Source } from "../model/message";
 
-interface BaseMessageEvent {
+interface MessageEventMeta {
     type: "GroupMessage" | "TempMessage" | "FriendMessage" | "SentMessage";
+    messageChain: MessageChain
+}
+
+interface ReceiveMessageEventMeta extends MessageEventMeta {
+    type: "GroupMessage" | "TempMessage" | "FriendMessage";
     messageChain: MessageChain & {
         0: Source;
     };
-    sender: Contact.User;
-}
-
-export interface FriendMessageEvent extends BaseMessageEvent {
-    type: "FriendMessage";
-    sender: Contact.Friend;
-}
-
-export interface GroupMessageEvent extends BaseMessageEvent {
-    type: "GroupMessage";
-    sender: Contact.Member;
-}
-
-export interface TempMessageEvent extends BaseMessageEvent {
-    type: "TempMessage";
-    sender: Contact.Member;
 }
 
 // 主动触发的发送事件
-export interface SentMessageEventBase {
+interface SentMessageEventMeta extends MessageEventMeta {
     type: "SentMessage";
-    receipt?: MessageReceipt;
-    bot: Contact.BotProfile
-    messageChain: MessageChain
-    botId: number
     targetType: "group" | "friend" | "temp"
-    target:  Contact.Friend | Contact.Group |  Contact.Member
+    receipt?: MessageReceipt;
+    messageChain: MessageChain
+    bot: Bot
+    target:  Friend | Group |  Member
 }
 
-export interface SentFriendMessageEvent extends SentMessageEventBase {
+export interface FriendMessageEvent extends ReceiveMessageEventMeta {
+    type: "FriendMessage";
+    sender: Friend;
+}
+
+export interface GroupMessageEvent extends ReceiveMessageEventMeta {
+    type: "GroupMessage";
+    sender: Member;
+}
+
+export interface TempMessageEvent extends ReceiveMessageEventMeta {
+    type: "TempMessage";
+    sender: Member;
+}
+
+export interface SentFriendMessageEvent extends SentMessageEventMeta {
     targetType: "friend"
-    target:  Contact.Friend
+    target:  Friend
 }
-
-export interface SentGroupMessageEvent extends SentMessageEventBase {
+ 
+export interface SentGroupMessageEvent extends SentMessageEventMeta {
     targetType: "group"
-    target:  Contact.Group
+    target:  Group
 }
 
-export interface SentTempMessageEvent extends SentMessageEventBase {
+export interface SentTempMessageEvent extends SentMessageEventMeta {
     targetType: "temp"
-    target:  Contact.Member
+    target:  Member
 }
 
-export type SentMessageEvent = SentFriendMessageEvent | SentGroupMessageEvent | SentTempMessageEvent
+export type ReceivedMessageEvent = GroupMessageEvent | FriendMessageEvent | TempMessageEvent
 
-/**
- * 包括 FriendMessage GroupMessage TempMessage SentMessage
- */
-export type MessageEvent = GroupMessageEvent | TempMessageEvent | FriendMessageEvent | SentMessageEvent;
+export type SentMessageEvent = SentGroupMessageEvent | SentFriendMessageEvent | SentTempMessageEvent
 
-/**
- * 聊天消息类型
- */
-export type MessageEventType = MessageEvent["type"];
-
-export type MessageEventMap = {
-    message: MessageEvent;
-    GroupMessage: GroupMessageEvent;
-    FriendMessage: FriendMessageEvent;
-    TempMessage: TempMessageEvent;
-    SentMessage: SentMessageEvent;
-};
+export type MessageEvent = ReceivedMessageEvent | SentMessageEvent

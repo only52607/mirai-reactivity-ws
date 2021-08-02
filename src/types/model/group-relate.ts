@@ -3,6 +3,8 @@
  * @packageDocumentation
  */
 
+import { IdentifiableEntity } from "./base";
+
 /**
  * 群设置
  */
@@ -36,7 +38,7 @@ export interface GroupConfig {
 /**
  * 群文件
  */
-export interface GroupFile {
+export interface GroupFile extends IdentifiableEntity<string> {
   name: string;
   id: string;
   path: string;
@@ -46,7 +48,7 @@ export interface GroupFile {
 /**
 * 群文件信息
 */
-export interface GroupFileInfo {
+export interface GroupFileInfo extends IdentifiableEntity<string> {
   /**
    * 文件名字
    */

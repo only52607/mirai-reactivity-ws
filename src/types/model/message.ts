@@ -3,14 +3,12 @@
  * @packageDocumentation
  */
 
-interface BaseSingleMessage {
-  type: string;
-}
+import { ClassifiedEntity, IdentifiableEntity, NumeralIdentifiableEntity } from "./base";
 
 /**
  * 源消息类型
  */
-export interface Source extends BaseSingleMessage {
+export interface Source extends ClassifiedEntity<string>, NumeralIdentifiableEntity {
   type: "Source";
   /**
    * 	消息的识别号，用于引用回复（Source 类型永远为 chain 的第一个元素）
@@ -25,7 +23,7 @@ export interface Source extends BaseSingleMessage {
 /**
  * 引用消息类型
  */
-export interface Quote extends BaseSingleMessage {
+export interface Quote extends ClassifiedEntity<string>, NumeralIdentifiableEntity {
   type: "Quote";
   /**
    * 	被引用回复的原消息的messageId
@@ -52,7 +50,7 @@ export interface Quote extends BaseSingleMessage {
 /**
  * 艾特某人消息
  */
-export interface At extends BaseSingleMessage {
+export interface At extends ClassifiedEntity<string> {
   type: "At";
   /**
    * 群员QQ号
@@ -67,14 +65,14 @@ export interface At extends BaseSingleMessage {
 /**
  * 艾特全体成员消息
  */
-export interface AtAll extends BaseSingleMessage {
+export interface AtAll extends ClassifiedEntity<string> {
   type: "AtAll";
 }
 
 /**
  * 原生表情消息
  */
-export interface Face extends BaseSingleMessage {
+export interface Face extends ClassifiedEntity<string> {
   type: "Face";
   /**
    * QQ表情编号，可选，优先高于name
@@ -89,7 +87,7 @@ export interface Face extends BaseSingleMessage {
 /**
  * 文本消息
  */
-export interface Plain extends BaseSingleMessage {
+export interface Plain extends ClassifiedEntity<string> {
   type: "Plain";
   /**
    * 文字消息
@@ -100,7 +98,7 @@ export interface Plain extends BaseSingleMessage {
 /**
  * 图片消息
  */
-export interface Image extends BaseSingleMessage {
+export interface Image extends ClassifiedEntity<string> {
   type: "Image";
   /**
    * 图片的 imageId，群图片与好友图片格式不同。不为空时将忽略 url 属性
@@ -119,7 +117,7 @@ export interface Image extends BaseSingleMessage {
 /**
  * 闪照消息
  */
-export interface FlashImage extends BaseSingleMessage {
+export interface FlashImage extends ClassifiedEntity<string> {
   type: "FlashImage";
   /**
    * 图片的imageId，群图片与好友图片格式不同。不为空时将忽略url属性
@@ -138,7 +136,7 @@ export interface FlashImage extends BaseSingleMessage {
 /**
  * 语音消息
  */
-export interface Voice extends BaseSingleMessage {
+export interface Voice extends ClassifiedEntity<string> {
   type: "Voice";
   /**
    * 语音的 voiceId，不为空时将忽略 url 属性
@@ -157,7 +155,7 @@ export interface Voice extends BaseSingleMessage {
 /**
  * 富文本消息（譬如合并转发）
  */
-export interface Xml extends BaseSingleMessage {
+export interface Xml extends ClassifiedEntity<string> {
   type: "Xml";
   /**
    * XML文本
@@ -165,7 +163,10 @@ export interface Xml extends BaseSingleMessage {
   xml: string;
 }
 
-export interface Json extends BaseSingleMessage {
+/**
+ * Json消息
+ */
+export interface Json extends ClassifiedEntity<string> {
   type: "Json";
   /**
    * Json文本
@@ -176,7 +177,7 @@ export interface Json extends BaseSingleMessage {
 /**
  * 小程序消息
  */
-export interface App extends BaseSingleMessage {
+export interface App extends ClassifiedEntity<string> {
   type: "App";
   /**
    * 内容
@@ -185,53 +186,26 @@ export interface App extends BaseSingleMessage {
 }
 
 /**
- * "Poke": 戳一戳
- * "ShowLove": 比心
- * "Like": 点赞
- * "Heartbroken": 心碎
- * "SixSixSix": 666
- * "FangDaZhao": 放大招
- */
-export enum PokeName {
-  Poke = "Poke",
-  ShowLove = "ShowLove",
-  Like = "Like",
-  Heartbroken = "Heartbroken",
-  SixSixSix = "SixSixSix",
-  FangDaZhao = "FangDaZhao",
-}
-
-/**
  * 戳一戳消息
  */
-export interface Poke extends BaseSingleMessage {
+export interface Poke extends ClassifiedEntity<string> {
   type: "Poke";
   /**
-   * 	戳一戳的类型
-   */
-  name: PokeName;
-}
-
-export interface ForwardNode {
-  /**
-   * 发送者 id
-   */
-  senderId: number;
-  /**
-   * 时间戳, 单位 秒
-   */
-  time: number;
-  /**
-   * 发送者姓名
-   */
-  senderName: string;
-  messageChain: MessageChain;
+   * 戳一戳的类型
+  * "Poke": 戳一戳
+  * "ShowLove": 比心
+  * "Like": 点赞
+  * "Heartbroken": 心碎
+  * "SixSixSix": 666
+  * "FangDaZhao": 放大招
+  */
+  name: "Poke" | "ShowLove" | "Like" | "Heartbroken" | "SixSixSix" | "FangDaZhao";
 }
 
 /**
  * 转发
  */
-export interface Forward extends BaseSingleMessage {
+export interface Forward extends ClassifiedEntity<string> {
   type: "Forward";
   /**
    * 标题，XX的聊天记录
@@ -252,10 +226,27 @@ export interface Forward extends BaseSingleMessage {
   /**
    * 转发内容
    */
-  nodeList: ForwardNode[];
+  nodeList: Array<{
+    /**
+     * 发送者 id
+     */
+    senderId: number;
+    /**
+     * 时间戳, 单位 秒
+     */
+    time: number;
+    /**
+     * 发送者姓名
+     */
+    senderName: string;
+    messageChain: MessageChain;
+  }>;
 }
 
-export interface File {
+/**
+ * 文件
+ */
+export interface File extends ClassifiedEntity<string>, IdentifiableEntity<string> {
   type: "File";
   /**
    * 文件唯一id
@@ -275,12 +266,10 @@ export interface File {
   size: number;
 }
 
-export type MusicShareKind = "NeteaseCloudMusic" | "QQMusic" | "MiguMusic";
-
 /**
  * 音乐分享
  */
-export interface MusicShare {
+export interface MusicShare extends ClassifiedEntity<string> {
   type: "MusicShare";
   /**
    * 音乐应用类型
@@ -331,24 +320,22 @@ export type SingleMessageMap = {
   MusicShare: MusicShare;
 };
 
-export type SingleMessageType = keyof SingleMessageMap;
 /**
  * FriendMessage | GroupMessage | TempMessage 下的 MessageChain 中的单条消息类型
  * 单条消息 此处命名与 mamoe/mirai-core 保持一致
  */
-export type SingleMessage = SingleMessageMap[SingleMessageType];
+export type SingleMessage = SingleMessageMap[keyof SingleMessageMap];
 
 /**
  * 消息链
  */
 export type MessageChain = Array<SingleMessage>;
 
+export type ReceivedMessageChain = MessageChain & { 0: Source }
+
 /**
  * 消息回执
  */
-
-
-
 export interface UploadImageReceipt {
   imageId: string;
   url: string;

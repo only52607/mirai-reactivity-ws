@@ -3,19 +3,13 @@
  * @packageDocumentation
  */
 
-import * as Contact from "../model/contact";
-
-/**
- * 内部基类
- */
-export interface BaseEvent {
-    type: string;
-}
+import { ClassifiedEntity } from "../model/base";
+import { Group, Member } from "../model/contact";
 
 /**
  * Bot 登录成功
  */
-export interface BotOnlineEvent extends BaseEvent {
+export interface BotOnlineEvent extends ClassifiedEntity<string> {
     type: "BotOnlineEvent";
     qq: number;
 }
@@ -23,7 +17,7 @@ export interface BotOnlineEvent extends BaseEvent {
 /**
  * Bot 主动离线
  */
-export interface BotOfflineEventActive extends BaseEvent {
+export interface BotOfflineEventActive extends ClassifiedEntity<string> {
     type: "BotOfflineEventActive";
     qq: number;
 }
@@ -31,7 +25,7 @@ export interface BotOfflineEventActive extends BaseEvent {
 /**
  * Bot被挤下线
  */
-export interface BotOfflineEventForce extends BaseEvent {
+export interface BotOfflineEventForce extends ClassifiedEntity<string> {
     type: "BotOfflineEventForce";
     qq: number;
 }
@@ -39,7 +33,7 @@ export interface BotOfflineEventForce extends BaseEvent {
 /**
  * Bot被服务器断开或因网络问题而掉线
  */
-export interface BotOfflineEventDropped extends BaseEvent {
+export interface BotOfflineEventDropped extends ClassifiedEntity<string> {
     type: "BotOfflineEventDropped";
     qq: number;
 }
@@ -47,7 +41,7 @@ export interface BotOfflineEventDropped extends BaseEvent {
 /**
  * Bot主动重新登录.
  */
-export interface BotReloginEvent extends BaseEvent {
+export interface BotReloginEvent extends ClassifiedEntity<string> {
     type: "BotReloginEvent";
     qq: number;
 }
@@ -55,19 +49,19 @@ export interface BotReloginEvent extends BaseEvent {
 /**
  * 群消息撤回
  */
-export interface GroupRecallEvent extends BaseEvent {
+export interface GroupRecallEvent extends ClassifiedEntity<string> {
     type: "GroupRecallEvent";
     authorId: number;
     messageId: number;
     time: number;
-    group: Contact.Group;
-    operator: Contact.Member | null;
+    group: Group;
+    operator: Member | null;
 }
 
 /**
  * 好友消息撤回
  */
-export interface FriendRecallEvent extends BaseEvent {
+export interface FriendRecallEvent extends ClassifiedEntity<string> {
     type: "FriendRecallEvent";
     authorId: number;
     messageId: number;
@@ -78,290 +72,199 @@ export interface FriendRecallEvent extends BaseEvent {
 /**
  * Bot在群里的权限被改变. 操作人一定是群主
  */
-export interface BotGroupPermissionChangeEvent extends BaseEvent {
+export interface BotGroupPermissionChangeEvent extends ClassifiedEntity<string> {
     type: "BotGroupPermissionChangeEvent";
-    origin: Contact.Permission;
-    current: Contact.Permission;
-    group: Contact.Group;
+    origin: Member["permission"];
+    current: Member["permission"];
+    group: Group;
 }
 
 /**
  * Bot被禁言
  */
-export interface BotMuteEvent extends BaseEvent {
+export interface BotMuteEvent extends ClassifiedEntity<string> {
     type: "BotMuteEvent";
     durationSeconds: number;
-    operator: Contact.Member;
+    operator: Member;
 }
 
 /**
  * Bot被取消禁言
  */
-export interface BotUnmuteEvent extends BaseEvent {
+export interface BotUnmuteEvent extends ClassifiedEntity<string> {
     type: "BotUnmuteEvent";
-    operator: Contact.Member;
+    operator: Member;
 }
 
 /**
  * Bot加入了一个新群
  */
-export interface BotJoinGroupEvent extends BaseEvent {
+export interface BotJoinGroupEvent extends ClassifiedEntity<string> {
     type: "BotJoinGroupEvent";
-    group: Contact.Group;
+    group: Group;
 }
 
 /**
  * Bot主动退出一个群
  */
-export interface BotLeaveEventActive extends BaseEvent {
+export interface BotLeaveEventActive extends ClassifiedEntity<string> {
     type: "BotLeaveEventActive";
-    group: Contact.Group;
+    group: Group;
 }
 
 /**
  * Bot被踢出一个群
  */
-export interface BotLeaveEventKick extends BaseEvent {
+export interface BotLeaveEventKick extends ClassifiedEntity<string> {
     type: "BotLeaveEventKick";
-    group: Contact.Group;
+    group: Group;
 }
 
 /**
  * 某个群名改变
  */
-export interface GroupNameChangeEvent extends BaseEvent {
+export interface GroupNameChangeEvent extends ClassifiedEntity<string> {
     type: "GroupNameChangeEvent";
     origin: string;
     current: string;
-    group: Contact.Group;
-    operator: Contact.Member | null;
+    group: Group;
+    operator: Member | null;
 }
 
 /**
  * 某群入群公告改变
  */
-export interface GroupEntranceAnnouncementChangeEvent extends BaseEvent {
+export interface GroupEntranceAnnouncementChangeEvent extends ClassifiedEntity<string> {
     type: "GroupEntranceAnnouncementChangeEvent";
     origin: string;
     current: string;
-    group: Contact.Group;
-    operator: Contact.Member | null;
+    group: Group;
+    operator: Member | null;
 }
 
 /**
  * 全员禁言
  */
-export interface GroupMuteAllEvent extends BaseEvent {
+export interface GroupMuteAllEvent extends ClassifiedEntity<string> {
     type: "GroupMuteAllEvent";
     origin: boolean;
     current: boolean;
-    group: Contact.Group;
-    operator: Contact.Member | null;
+    group: Group;
+    operator: Member | null;
 }
 
 /**
  * 匿名聊天
  */
-export interface GroupAllowAnonymousChatEvent extends BaseEvent {
+export interface GroupAllowAnonymousChatEvent extends ClassifiedEntity<string> {
     type: "GroupAllowAnonymousChatEvent";
     origin: boolean;
     current: boolean;
-    group: Contact.Group;
-    operator: Contact.Member | null;
+    group: Group;
+    operator: Member | null;
 }
 
 /**
  * 坦白说
  */
-export interface GroupAllowConfessTalkEvent extends BaseEvent {
+export interface GroupAllowConfessTalkEvent extends ClassifiedEntity<string> {
     type: "GroupAllowConfessTalkEvent";
     origin: boolean;
     current: boolean;
-    group: Contact.Member;
+    group: Member;
     isByBot: boolean;
 }
 
 /**
  * 允许群员邀请好友加群
  */
-export interface GroupAllowMemberInviteEvent extends BaseEvent {
+export interface GroupAllowMemberInviteEvent extends ClassifiedEntity<string> {
     type: "GroupAllowMemberInviteEvent";
     origin: boolean;
     current: boolean;
-    group: Contact.Group;
-    operator: Contact.Member | null;
+    group: Group;
+    operator: Member | null;
 }
 
 /**
  * 新人入群的事件
  */
-export interface MemberJoinEvent extends BaseEvent {
+export interface MemberJoinEvent extends ClassifiedEntity<string> {
     type: "MemberJoinEvent";
-    member: Contact.Member;
+    member: Member;
 }
 
 /**
  * 成员被踢出群（该成员不是Bot）
  */
-export interface MemberLeaveEventKick extends BaseEvent {
+export interface MemberLeaveEventKick extends ClassifiedEntity<string> {
     type: "MemberLeaveEventKick";
-    member: Contact.Member;
-    operator: Contact.Member | null;
+    member: Member;
+    operator: Member | null;
 }
 
 /**
  * 成员主动离群（该成员不是Bot）
  */
-export interface MemberLeaveEventQuit extends BaseEvent {
+export interface MemberLeaveEventQuit extends ClassifiedEntity<string> {
     type: "MemberLeaveEventQuit";
-    member: Contact.Member;
+    member: Member;
 }
 
 /**
  * 群名片改动
  */
-export interface MemberCardChangeEvent extends BaseEvent {
+export interface MemberCardChangeEvent extends ClassifiedEntity<string> {
     type: "MemberCardChangeEvent";
     origin: string;
     current: string;
-    member: Contact.Member;
-    operator: Contact.Member | null;
+    member: Member;
+    operator: Member | null;
 }
 
 /**
  * 群头衔改动（只有群主有操作限权）
  */
-export interface MemberSpecialTitleChangeEvent extends BaseEvent {
+export interface MemberSpecialTitleChangeEvent extends ClassifiedEntity<string> {
     type: "MemberSpecialTitleChangeEvent";
     origin: string;
     current: string;
-    member: Contact.Member;
+    member: Member;
 }
 
 /**
  * 成员权限改变的事件（该成员不可能是Bot，见 BotGroupPermissionChangeEvent）
  */
-export interface MemberPermissionChangeEvent extends BaseEvent {
+export interface MemberPermissionChangeEvent extends ClassifiedEntity<string> {
     type: "MemberPermissionChangeEvent";
-    origin: Contact.Permission;
-    current: Contact.Permission;
-    member: Contact.Member;
+    origin: Member["permission"];
+    current: Member["permission"];
+    member: Member;
 }
 
 /**
  * 群成员被禁言事件（该成员不可能是Bot，见 BotMuteEvent）
  */
-export interface MemberMuteEvent extends BaseEvent {
+export interface MemberMuteEvent extends ClassifiedEntity<string> {
     type: "MemberMuteEvent";
     durationSeconds: number;
-    member: Contact.Member;
-    operator: Contact.Member | null;
+    member: Member;
+    operator: Member | null;
 }
 
 /**
  * 群成员被取消禁言事件（该成员不可能是Bot，见 BotUnmuteEvent）
  */
-export interface MemberUnmuteEvent extends BaseEvent {
+export interface MemberUnmuteEvent extends ClassifiedEntity<string> {
     type: "MemberUnmuteEvent";
-    member: Contact.Member;
-    operator: Contact.Member | null;
+    member: Member;
+    operator: Member | null;
 }
 
 /**
- * 基础请求事件格式
+ * 戳一戳事件
  */
-interface BaseRequestEvent extends BaseEvent {
-    /**
-     * 事件标识，响应该事件时的标识
-     */
-    eventId: number;
-}
-
-/**
- * 添加好友申请
- */
-export interface NewFriendRequestEvent extends BaseRequestEvent {
-    type: "NewFriendRequestEvent";
-    /**
-     * 申请人QQ号
-     */
-    fromId: number;
-    /**
-     * 申请人如果通过某个群添加好友，该项为该群群号；否则为 0
-     */
-    groupId: number;
-    /**
-     * 	申请人的昵称或群名片
-     */
-    nick: string;
-    /**
-     * 申请消息
-     */
-    message: string;
-}
-
-/**
- * 用户入群申请（Bot需要有管理员权限）
- */
-export interface MemberJoinRequestEvent extends BaseRequestEvent {
-    type: "MemberJoinRequestEvent";
-    /**
-     * 申请人 QQ号
-     */
-    fromId: number;
-    /**
-     * 申请人申请入群的群号
-     */
-    groupId: number;
-    /**
-     * 申请人申请入群的群名称
-     */
-    groupName: string;
-    /**
-     * 申请人的昵称或群名片
-     */
-    nick: string;
-    /**
-     * 申请消息
-     */
-    message: string;
-}
-
-/**
- * Bot被邀请入群申请
- */
-export interface BotInvitedJoinGroupRequestEvent extends BaseRequestEvent {
-    type: "BotInvitedJoinGroupRequestEvent";
-    /**
-     * 邀请人（好友）的 QQ号
-     */
-    fromId: number;
-    /**
-     * 被邀请进入群的群号
-     */
-    groupId: number;
-    /**
-     * 被邀请进入群的群名称
-     */
-    groupName: string;
-    /**
-     * 邀请人（好友）的昵称
-     */
-    nick: string;
-    /**
-     * 邀请消息
-     */
-    message: string;
-}
-
-export type RequestEvent =
-    | NewFriendRequestEvent
-    | MemberJoinRequestEvent
-    | BotInvitedJoinGroupRequestEvent;
-
-export type RequestEventType = RequestEvent["type"];
-
-export interface NudgeEvent extends BaseEvent {
+export interface NudgeEvent extends ClassifiedEntity<string> {
     type: "NudgeEvent";
     /**
      * 戳一戳发起人 QQ 号
@@ -394,6 +297,98 @@ export interface NudgeEvent extends BaseEvent {
     };
 }
 
+/**
+ * 基础请求事件格式
+ */
+interface RequestEventMeta extends ClassifiedEntity<string> {
+    /**
+     * 事件标识，响应该事件时的标识
+     */
+    eventId: number;
+}
+
+/**
+ * 添加好友申请
+ */
+export interface NewFriendRequestEvent extends RequestEventMeta {
+    type: "NewFriendRequestEvent";
+    /**
+     * 申请人QQ号
+     */
+    fromId: number;
+    /**
+     * 申请人如果通过某个群添加好友，该项为该群群号；否则为 0
+     */
+    groupId: number;
+    /**
+     * 	申请人的昵称或群名片
+     */
+    nick: string;
+    /**
+     * 申请消息
+     */
+    message: string;
+}
+
+/**
+ * 用户入群申请（Bot需要有管理员权限）
+ */
+export interface MemberJoinRequestEvent extends RequestEventMeta {
+    type: "MemberJoinRequestEvent";
+    /**
+     * 申请人 QQ号
+     */
+    fromId: number;
+    /**
+     * 申请人申请入群的群号
+     */
+    groupId: number;
+    /**
+     * 申请人申请入群的群名称
+     */
+    groupName: string;
+    /**
+     * 申请人的昵称或群名片
+     */
+    nick: string;
+    /**
+     * 申请消息
+     */
+    message: string;
+}
+
+/**
+ * Bot被邀请入群申请
+ */
+export interface BotInvitedJoinGroupRequestEvent extends RequestEventMeta {
+    type: "BotInvitedJoinGroupRequestEvent";
+    /**
+     * 邀请人（好友）的 QQ号
+     */
+    fromId: number;
+    /**
+     * 被邀请进入群的群号
+     */
+    groupId: number;
+    /**
+     * 被邀请进入群的群名称
+     */
+    groupName: string;
+    /**
+     * 邀请人（好友）的昵称
+     */
+    nick: string;
+    /**
+     * 邀请消息
+     */
+    message: string;
+}
+
+export type RequestEvent =
+    | NewFriendRequestEvent
+    | MemberJoinRequestEvent
+    | BotInvitedJoinGroupRequestEvent;
+
 export type EventMap = {
     BotOnlineEvent: BotOnlineEvent;
     BotOfflineEventActive: BotOfflineEventActive;
@@ -422,14 +417,43 @@ export type EventMap = {
     MemberPermissionChangeEvent: MemberPermissionChangeEvent;
     MemberMuteEvent: MemberMuteEvent;
     MemberUnmuteEvent: MemberUnmuteEvent;
-    // 请求事件
     NewFriendRequestEvent: NewFriendRequestEvent;
     MemberJoinRequestEvent: MemberJoinRequestEvent;
     BotInvitedJoinGroupRequestEvent: BotInvitedJoinGroupRequestEvent;
-
     NudgeEvent: NudgeEvent;
 };
 
-// string union of event type
-export type EventType = keyof EventMap;
-export type NormalEvent = EventMap[EventType];
+export type NormalEvent = EventMap[keyof EventMap];
+
+export interface RequestEventReceiptMeta {
+    /**
+     * session key
+     */
+    sessionKey?: string;
+    /**
+     * 事件标识
+     */
+    eventId: number;
+    /**
+     * 发起者 QQ
+     */
+    fromId: number;
+    /**
+     * 来源群号
+     */
+    groupId: number;
+    /**
+     * 响应的操作类型
+     */
+    operate: number;
+    /**
+     * 回复的信息
+     */
+    message: string;
+}
+
+export interface NewFriendRequestEventReceipt extends RequestEventReceiptMeta {}
+
+export interface MemberJoinRequestEventReceipt extends RequestEventReceiptMeta {}
+
+export interface BotInvitedJoinGroupRequestEventReceipt extends RequestEventReceiptMeta {}

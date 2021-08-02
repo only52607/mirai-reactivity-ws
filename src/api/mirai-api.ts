@@ -1,4 +1,4 @@
-import { BotProfile, Event, EventListener, File, FriendProfile, GroupConfig, MemberProfile, MessageChain, MessageEvent, MessageReceipt } from "../types";
+import { BotInvitedJoinGroupRequestEventReceipt, BotProfile, Event, EventListener, File, FriendProfile, GroupConfig, MemberJoinRequestEventReceipt, MemberProfile, MessageChain, MessageEvent, MessageReceipt, NewFriendRequestEventReceipt } from "../types";
 import { PluginInfo, FriendList, GroupFile, GroupFileInfo, GroupList, MemberList, UploadImageReceipt, UploadVoiceReceipt, Member } from "../types/model";
 
 
@@ -44,12 +44,26 @@ interface EventListenerApi {
 }
 
 interface EventProcessApi {
+    /**
+     * 处理 添加好友申请事件(NewFriendRequestEvent)
+     */
+    processNewFriendRequestEvent(receipt: NewFriendRequestEventReceipt): Promise<void>
+
+    /**
+     * 处理 用户入群申请事件(MemberJoinRequestEvent)
+     */
+    processMemberJoinRequestEvent(receipt: MemberJoinRequestEventReceipt): Promise<void>
+
+    /**
+     * 处理 Bot被邀请入群申请事件(BotInvitedJoinGroupRequestEvent)
+     */
+    processBotInvitedJoinGroupRequestEvent(receipt: BotInvitedJoinGroupRequestEventReceipt): Promise<void>
 }
 
 interface AccountInfoApi {
     /**
-         * 获取 bot 的好友列表
-         */
+     * 获取 bot 的好友列表
+     */
     friendList(): Promise<FriendList>
 
     /**
