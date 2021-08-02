@@ -161,7 +161,7 @@ function buildApp(content: string): MessageType.App {
  * - "FangDaZhao": 放大招
  * @param name 戳一戳的类型
  */
-function buildPoke(name: MessageType.PokeName): MessageType.Poke {
+function buildPoke(name: MessageType.Poke["name"]): MessageType.Poke {
   return {
     type: "Poke",
     name,
@@ -180,7 +180,7 @@ function buildPoke(name: MessageType.PokeName): MessageType.Poke {
  * @returns
  */
 function buildMusicShare(
-  kind: MessageType.MusicShareKind,
+  kind: MessageType.MusicShare["kind"],
   title: string,
   summary: string,
   jumpUrl: string,
