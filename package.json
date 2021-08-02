@@ -1,6 +1,6 @@
 {
   "name": "mirai-reactivity-ws",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Vue3 reactivity utils for mirai-api-http(websocket)",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
